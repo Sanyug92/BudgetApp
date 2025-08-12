@@ -3,7 +3,7 @@ import { Database } from '@/types/database.types';
 export type DatabaseBill = Database['public']['Tables']['bills']['Row'];
 
 export type Bill = Omit<DatabaseBill, 'is_mandatory'> & {
-  status: 'paid' | 'unpaid' | 'overdue';
+  status: 'paid' | 'unpaid' ;
   type: 'mandatory' | 'optional';
   paid_by_credit_card?: boolean;
   due_date?: number;
@@ -21,7 +21,7 @@ export type BillUpdate = Partial<Omit<Bill, 'id' | 'user_id' | 'created_at'>> & 
   
   // Common fields
   updated_at?: string;
-  status?: 'paid' | 'unpaid' | 'overdue';
+  status?: 'paid' | 'unpaid' | 'unpaid';
   type?: 'mandatory' | 'optional';
   name?: string;
   amount?: number;

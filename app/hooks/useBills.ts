@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase'; // Use relative path or configure module-resolver
 import type { Bill, BillUpdate } from '@/types/bill.types';
+import { remove } from '@/utils/storage';
 
 export const useBills = (userId?: string) => {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -9,7 +10,7 @@ export const useBills = (userId?: string) => {
 
   const transformBill = (bill: any): Bill => ({
     ...bill,
-    status: bill.status as 'paid' | 'unpaid' | 'overdue',
+    status: bill.status as 'paid' | 'unpaid' | 'unpaid',
     type: bill.is_mandatory ? 'mandatory' : 'optional',
     paid_by_credit_card: bill.paid_by_credit_card || false,
     due_date: bill.due_date || new Date().getTime(),
@@ -29,7 +30,7 @@ export const useBills = (userId?: string) => {
         .order('due_date', { ascending: true });
 
       if (error) throw error;
-      
+
       // Transform the data to match the Bill type
       const transformedBills = (data || []).map(transformBill);
       setBills(transformedBills);
@@ -48,17 +49,20 @@ export const useBills = (userId?: string) => {
       >
     ) => {
       if (!userId) throw new Error('User not authenticated');
-
+      const { type, ...billWithoutType } = bill;
+      const updateBillData = {
+        ...billWithoutType,
+        user_id: userId,
+        is_mandatory: type === 'mandatory',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
       try {
         const { data, error } = await supabase
           .from('bills')
           .insert([
             {
-              ...bill,
-              user_id: userId,
-              is_mandatory: bill.type === 'mandatory',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              ...updateBillData,
             },
           ])
           .select()
@@ -115,7 +119,7 @@ export const useBills = (userId?: string) => {
         if ('type' in updates) {
           updateData.is_mandatory = updates.type === 'mandatory';
         }
-
+console.log("updateData type shit", updateData)
         if ('category' in updates) updateData.category = updates.category;
 
         const { data, error } = await supabase

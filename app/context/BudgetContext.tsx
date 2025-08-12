@@ -602,8 +602,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       name: bill.name,
       amount: bill.amount,
       due_date: bill.due_date,
-      type: bill.type,
       is_mandatory: bill.type === 'mandatory',
+      type: bill.type,
       is_paid: bill.status === 'paid',
       paid_by_credit_card: bill.paid_by_credit_card || false,
     };
