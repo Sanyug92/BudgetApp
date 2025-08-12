@@ -13,14 +13,14 @@ import { useAuth } from "@/context/AuthContext"
 import { ErrorBoundary } from "@/screens/ErrorScreen/ErrorBoundary"
 import { LoginScreen } from "@/screens/LoginScreen"
 import { ResetPasswordScreen } from "@/screens/ResetPasswordScreen"
-import { WeeklyBudgetScreen } from "@/screens/WeeklyBudgetScreen"
+import WeeklyBudgetScreen from "@/screens/WeeklyBudgetScreen"
 import { useBudgetContext, BudgetData } from "@/context/BudgetContext"
 import { useState } from "react"
 import { SignupScreen } from "@/screens/SignupScreen"
 import { useAppTheme } from "@/theme/context"
 import { BudgetProvider } from "@/context/BudgetContext"
 
-import { DemoNavigator, DemoTabParamList } from "./DemoNavigator"
+import { Navigator, NavigatorParamList } from "./Navigator"
 import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 import BudgetSetupScreen from "@/screens/BudgetSetupScreen"
 import { BillsScreen } from "@/screens/BillsScreen"
@@ -32,7 +32,7 @@ import { CreditCardCarousel } from "@/screens/CreditCardCarousel"
  *
  * For more information, see this documentation:
  *   https://reactnavigation.org/docs/params/
- *   https://reactnavigation.org/docs/typescript#type-checking-the-navigator
+ *   https://reactnavigation.org/docs/typescript/#type-checking-the-navigator
  *   https://reactnavigation.org/docs/typescript/#organizing-types
  */
 
@@ -41,7 +41,7 @@ export type AppStackParamList = {
   Login: undefined
   Signup: undefined
   ResetPassword: undefined
-  Demo: NavigatorScreenParams<DemoTabParamList>
+  Demo: NavigatorScreenParams<NavigatorParamList>
   Budget: undefined
   Bills: undefined
   CreditCards: undefined
@@ -71,7 +71,7 @@ const AppStack = () => {
     theme: { colors },
   } = useAppTheme()
 
-  return (
+  const navigationContent = (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
@@ -104,20 +104,28 @@ const AppStack = () => {
       {/* IGNITE_GENERATOR_ANCHOR_APP_STACK_SCREENS */}
     </Stack.Navigator>
   )
+
+  return <BudgetProvider>{navigationContent}</BudgetProvider>
 }
 
 export interface NavigationProps
   extends Partial<ComponentProps<typeof NavigationContainer<AppStackParamList>>> {}
 
 const BillsScreenWrapper = () => {
+  return (
+    <BudgetProvider>
+      <BillsScreenInternal />
+    </BudgetProvider>
+  );
+}
+
+const BillsScreenInternal = () => {
   const { budgetData, updateBudgetData } = useBudgetContext();
   
   const handleUpdateSpentAmount = (amount: number) => {
-    // Update the budget data with the new spent amount
     updateBudgetData({
       ...budgetData,
       discretionarySpent: amount,
-      // Recalculate other dependent fields if needed
       discretionaryLeft: budgetData.monthlyIncome - budgetData.totalSpent - budgetData.savingsGoal - amount,
       discretionaryLeftPercentage: budgetData.monthlyIncome > 0 
         ? ((budgetData.monthlyIncome - budgetData.totalSpent - budgetData.savingsGoal - amount) / budgetData.monthlyIncome) * 100 
@@ -125,26 +133,11 @@ const BillsScreenWrapper = () => {
     });
   };
 
-  return <BillsScreen data={budgetData} updateSpentAmount={handleUpdateSpentAmount} />;
+  return <BillsScreen />;
 };
 
 const HomeScreenWrapper = () => {
-  const { budgetData } = useBudgetContext();
-  const [selectedTarget, setSelectedTarget] = useState<number | undefined>();
-
-  const currentDate = new Date();
-  const currentWeek = Math.ceil(currentDate.getDate() / 7);
-  const dayOfWeek = currentDate.getDay() || 7; // Convert 0 (Sunday) to 7
-
-  return (
-    <WeeklyBudgetScreen
-      data={budgetData}
-      currentWeek={currentWeek}
-      dayOfWeek={dayOfWeek}
-      onTargetSelect={setSelectedTarget}
-      selectedTarget={selectedTarget}
-    />
-  );
+  return <Navigator />;
 }
 
 export const AppNavigator = (props: NavigationProps) => {

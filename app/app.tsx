@@ -23,8 +23,10 @@ import { useFonts } from "expo-font"
 import * as Linking from "expo-linking"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context"
+import { PaperProvider } from "react-native-paper"
 
 import { AuthProvider } from "./context/AuthContext"
+import { BudgetProvider } from "./context/BudgetContext"
 import { initI18n } from "./i18n"
 import { AppNavigator } from "./navigators/AppNavigator"
 import { useNavigationPersistence } from "./navigators/navigationUtilities"
@@ -39,21 +41,20 @@ export const NAVIGATION_PERSISTENCE_KEY = "NAVIGATION_STATE"
 const prefix = Linking.createURL("/")
 const config = {
   screens: {
-    Login: {
+    Home: {
       path: "",
-    },
-    Welcome: "welcome",
-    Demo: {
       screens: {
-        DemoShowroom: {
-          path: "showroom/:queryIndex?/:itemIndex?",
-        },
-        DemoDebug: "debug",
-        DemoPodcastList: "podcast",
-        DemoCommunity: "community",
-      },
+        Budget: "budget",
+        Bills: "bills",
+        CreditCards: "credit-cards",
+        Profile: "profile",
+        Settings: "settings"
+      }
     },
-  },
+    Login: "login",
+    Welcome: "welcome",
+    // Remove the Demo section if you're not using it
+  }
 }
 
 /**
@@ -97,13 +98,17 @@ export function App() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <KeyboardProvider>
         <AuthProvider>
-          <ThemeProvider>
-            <AppNavigator
-              linking={linking}
-              initialState={initialNavigationState}
-              onStateChange={onNavigationStateChange}
-            />
-          </ThemeProvider>
+          <BudgetProvider>
+            <ThemeProvider>
+              <PaperProvider>
+                <AppNavigator
+                  linking={linking}
+                  initialState={initialNavigationState}
+                  onStateChange={onNavigationStateChange}
+                />
+              </PaperProvider>
+            </ThemeProvider>
+          </BudgetProvider>
         </AuthProvider>
       </KeyboardProvider>
     </SafeAreaProvider>

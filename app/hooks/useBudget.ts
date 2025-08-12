@@ -10,6 +10,7 @@ export const useBudget = (userId: string | undefined) => {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchBudget = useCallback(async () => {
+    console.log("xxuser id", userId)
     if (!userId) return;
 
     try {
@@ -21,7 +22,7 @@ export const useBudget = (userId: string | undefined) => {
         .single();
 
       if (error) throw error;
-
+console.log("xxbudget data", data)
       setBudget(data || null);
     } catch (err) {
       setError(err as Error);

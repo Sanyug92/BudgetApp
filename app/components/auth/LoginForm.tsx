@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { TextInput, Button } from "react-native-paper";
 import { AlertCircle } from "lucide-react-native";
 import { useAuth } from "@/context/AuthContext";
+import { useBudgetContext } from "@/context/BudgetContext";
 
 interface LoginFormProps {
   navigation: any; 
@@ -13,19 +14,52 @@ export function LoginForm({ navigation }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
+
+  const { budgetData, loading: budgetLoading } = useBudgetContext();
+  const [isCheckingBudget, setIsCheckingBudget] = useState(false);
+
+  useEffect(() => {
+    // This effect will run when the auth state changes
+    if (user && !loading) {
+      console.log('User authenticated, navigating to Home');
+      navigation.replace('Home');
+    }
+  }, [user, loading, navigation]);
+
+  useEffect(() => {
+    // This effect will run after successful login when budgetData is available
+    if (isCheckingBudget && !budgetLoading) {
+      const hasBudget = budgetData && budgetData.monthlyIncome > 0;
+      // Always navigate to 'Home' which is part of the tab navigator
+      // The Home screen can then handle the redirection to Budget if needed
+      navigation.replace('Home');
+      setIsCheckingBudget(false);
+      setLoading(false);
+    }
+  }, [budgetData, budgetLoading, isCheckingBudget, navigation]);
 
   const handleSubmit = async () => {
     setError(null);
     setLoading(true);
 
     try {
+      console.log('Attempting to sign in...');
       const { error } = await signIn(email, password);
-      if (error) throw error;
-      navigation.navigate('Home'); // Specify the route name to navigate to after login
+      
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+      
+      console.log('Sign in successful, waiting for auth state update...');
+      
+      // The navigation will be handled by the useEffect that watches for auth state changes
+      // We don't need to navigate here as the AuthProvider will handle it
+      
     } catch (error: any) {
+      console.error('Login error:', error);
       setError(error.message || 'Failed to sign in');
-    } finally {
       setLoading(false);
     }
   };

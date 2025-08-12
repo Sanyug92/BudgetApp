@@ -5,9 +5,9 @@ import { DollarSign, PiggyBank, CreditCard, Trash2, PlusCircle } from "lucide-re
 import { useBudgetContext } from "@/context/BudgetContext";
 import type { Bill } from "@/types/bill.types";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import type { DemoTabParamList } from "@/navigators/DemoNavigator";
+import type { NavigatorParamList } from "@/navigators/Navigator";
 
-type Props = BottomTabScreenProps<DemoTabParamList, "Budget">;
+type Props = BottomTabScreenProps<NavigatorParamList, "Budget">;
 
 const DEFAULT_BILL: Omit<Bill, "id"> = {
   name: "",

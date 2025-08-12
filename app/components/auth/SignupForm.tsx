@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from "re
 import { Text, TextInput, Button, HelperText, Card } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { AlertCircle } from "lucide-react-native";
-import { useAuth } from "@/context/SupabaseContext";
+import { useAuth } from "@/context/AuthContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppStackParamList } from "@/navigators/AppNavigator";
 

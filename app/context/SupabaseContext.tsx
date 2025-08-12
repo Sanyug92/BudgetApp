@@ -43,6 +43,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
+        console.log("xxsession user", session?.user)
         setUser(session?.user ?? null);
         setLoading(false);
 
@@ -64,6 +65,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
+      console.log("xxsession user", session?.user)
       setUser(session?.user ?? null);
       setLoading(false);
 
@@ -85,14 +87,31 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.log("xxsign in email", email)
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      console.log("xxsign in data", data)
+      if (data?.user && data.session) {
+        setUser(data.user);
+        console.log("xxafter sign in user", data.user)
+        setSession(data.session);
+        
+        // Fetch and set the user profile
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        setProfile(profileData);
+      }
+      
       return { data, error };
     } catch (error) {
+      console.error('Error signing in:', error);
       return { data: null, error: error as Error };
     } finally {
       setLoading(false);
@@ -118,6 +137,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       await supabase.auth.signOut();
+      console.log("xxsign out")
       setUser(null);
       setSession(null);
       setProfile(null);

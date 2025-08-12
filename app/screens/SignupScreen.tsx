@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useAuth } from "@/context/SupabaseContext";
+import { useAuth } from "@/context/AuthContext";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AppStackParamList } from "@/navigators/AppNavigator";

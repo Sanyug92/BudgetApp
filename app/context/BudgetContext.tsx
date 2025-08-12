@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Bill } from '@/types/bill.types';
-import { useAuth } from './SupabaseContext';
+import { useAuth } from './AuthContext';
 import { useCreditCards } from '@/hooks/useCreditCards';
 import { useBills } from '@/hooks/useBills';
 import { useBudget } from '@/hooks/useBudget';
@@ -18,7 +18,7 @@ export interface BudgetContextType {
   // Budget Data
   budgetData: BudgetData;
   updateBudgetData: (newData: BudgetData) => void;
-  fetchAndCalculateBudget: () => Promise<void>;
+  fetchAndCalculateBudget: (currentUser?: any) => Promise<void>;
 
   // Credit Cards
   addCreditCard: (card: { name: string; limit: number; available: number }) => Promise<{ error: Error | null }>;
@@ -85,14 +85,64 @@ export function useBudgetContext() {
 }
 
 export function BudgetProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  const { budget, updateBudget, loading: budgetLoading, error: budgetError } = useBudget(user?.id);
-  const { cards, addCreditCard, updateCreditCard, deleteCreditCard, loading: cardsLoading, error: cardsError } = useCreditCards(user?.id);
-  const { bills, addBill, updateBill, deleteBill, loading: billsLoading, error: billsError } = useBills(user?.id);
-  const [error, setError] = useState<Error | null>(null);
-  const [initialLoad, setInitialLoad] = useState(true);
-  const loading = budgetLoading || cardsLoading || billsLoading;
+  const { user, loading: authLoading = true } = useAuth();
+  
+  // Debug logs
+  useEffect(() => {
+    console.log('BudgetProvider: Auth state:', { 
+      hasUser: !!user, 
+      userId: user?.id,
+      authLoading 
+    });
+  }, [user, authLoading]);
 
+  // Only fetch budget data if we have a user and auth is done loading
+  const shouldFetchData = authLoading === false && !!user?.id;
+  
+  const { 
+    budget, 
+    updateBudget, 
+    loading: budgetLoading, 
+    error: budgetError 
+  } = useBudget(shouldFetchData ? user.id : undefined);
+  
+  const { 
+    cards, 
+    addCreditCard, 
+    updateCreditCard, 
+    deleteCreditCard, 
+    loading: cardsLoading, 
+    error: cardsError 
+  } = useCreditCards(shouldFetchData ? user?.id : undefined);
+  
+  const { 
+    bills, 
+    addBill, 
+    updateBill, 
+    deleteBill, 
+    loading: billsLoading, 
+    error: billsError 
+  } = useBills(shouldFetchData ? user?.id : undefined);
+
+  // Combine all loading states
+  const loading = authLoading || budgetLoading || cardsLoading || billsLoading;
+  
+  // Debug logs for data loading state
+  useEffect(() => {
+    if (!authLoading) {
+      console.log('BudgetProvider: Data loading state:', {
+        budgetLoading,
+        cardsLoading,
+        billsLoading,
+        hasBudget: !!budget,
+        cardsCount: cards?.length || 0,
+        billsCount: bills?.length || 0,
+      });
+    }
+  }, [authLoading, budgetLoading, cardsLoading, billsLoading, budget, cards, bills]);
+  
+  const [error, setError] = useState<Error | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [budgetData, setBudgetData] = useState<BudgetData>({
     monthlyIncome: 0,
     mandatoryBills: [],
@@ -106,11 +156,49 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     discretionaryLeftPercentage: 0,
     lastUpdated: Date.now()
   });
+  
+  // Add debug logs for auth state changes
+  useEffect(() => {
+    console.log('Auth state in BudgetProvider:', {
+      hasUser: !!user,
+      userId: user?.id,
+      authLoading,
+      budgetLoading,
+      budgetExists: !!budget,
+      cardsLoading,
+      billsLoading,
+      isInitialized
+    });
+  }, [user, loading, isInitialized, budget]);
 
-  const fetchAndCalculateBudget = useCallback(async () => {
+  // Create a default budget if one doesn't exist
+  useEffect(() => {
+    if (user?.id && !budget && !budgetLoading) {
+      console.log('No budget found for user, creating default budget');
+      updateBudget({
+        monthly_income: 0,
+        savings_goal: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }).catch(console.error);
+    }
+  }, [user?.id, budget, budgetLoading, updateBudget]);
+
+  const fetchAndCalculateBudget = useCallback(async (currentUser = user) => {
     console.log('Fetching and calculating budget...');
+    console.log('Current user in fetchAndCalculateBudget:', currentUser?.id || 'No user');
+    console.log('Budget data:', budget);
+    
     try {
-      if (!user?.id || !budget) return;
+      if (!currentUser?.id) {
+        console.log('Skipping budget calculation: No user');
+        return;
+      }
+      
+      if (!budget) {
+        console.log('No budget data available yet');
+        return;
+      }
 
       // Use the latest bills and cards data
       const currentBills = bills || [];
@@ -153,7 +241,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
         return {
           id: bill.id,
-          user_id: bill.user_id || user?.id || '',
+          user_id: bill.user_id || currentUser?.id || '',
           name: bill.name,
           amount: bill.amount,
           due_date: bill.due_date,
@@ -234,7 +322,31 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       console.error('Error fetching and calculating budget:', err);
       setError(err instanceof Error ? err : new Error('Failed to fetch budget data'));
     }
-  }, [user?.id, budget, bills, cards]);
+  }, [user?.id, budget, bills, cards, updateBill, updateCreditCard, updateBudget]);
+
+  // Effect for initial data loading
+  useEffect(() => {
+    if (!user?.id) {
+      console.log('No user, skipping budget initialization');
+      return;
+    }
+
+    if (isInitialized) {
+      console.log('Already initialized, skipping');
+      return;
+    }
+
+    if (budgetLoading) {
+      console.log('Budget still loading, waiting...');
+      return;
+    }
+
+    console.log('Initializing budget data for user:', user.id);
+    fetchAndCalculateBudget(user);
+    setIsInitialized(true);
+  }, [user, isInitialized, fetchAndCalculateBudget, budgetLoading]);
+
+
 
   const recalculateBudget = useCallback((
     prevData: BudgetData,
@@ -485,7 +597,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
   }, [bills, cards, budget, user, recalculateBudget]);
 
-
   const handleAddBill = useCallback(async (bill: Omit<Bill, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
     const dbBill = {
       name: bill.name,
@@ -557,7 +668,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       
       // If the update was successful and we changed the due date, trigger a budget recalculation
       if (updates.due_date !== undefined) {
-        await fetchAndCalculateBudget();
+        await fetchAndCalculateBudget(user);
       }
       
       return result;
@@ -574,11 +685,27 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     return deleteBill(id);
   }, [deleteBill]);
 
-// ... (rest of the code remains the same)
-  // or when dependencies change
+  // Effect to handle initial data loading when user logs in
   useEffect(() => {
-    fetchAndCalculateBudget();
-  }, [fetchAndCalculateBudget]);
+    if (user?.id && budget && !isInitialized) {
+      console.log('Initial budget calculation for user:', user.id);
+      fetchAndCalculateBudget(user);
+      setIsInitialized(true);
+    } else if (!user?.id && isInitialized) {
+      // Reset initialization state when user logs out
+      setIsInitialized(false);
+    }
+  }, [user?.id, budget, isInitialized, fetchAndCalculateBudget]);
+
+  // Effect to handle updates to bills or cards
+  useEffect(() => {
+    if (!user?.id || !budget || !isInitialized) {
+      return;
+    }
+
+    console.log('Recalculating budget due to data changes');
+    fetchAndCalculateBudget(user);
+  }, [bills, cards, user, budget, isInitialized, fetchAndCalculateBudget]);
 
   const value = {
     budgetData,
