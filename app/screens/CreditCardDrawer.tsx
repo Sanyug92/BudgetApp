@@ -268,11 +268,6 @@ export function CreditCardDrawer() {
         <View style={styles.header}>
           <CreditCardIcon size={20} color={theme.colors.primary} />
           <Text style={styles.headerText}>Credit Cards</Text>
-          {isExpanded ? (
-            <ChevronDown size={20} color={theme.colors.primary} />
-          ) : (
-            <ChevronUp size={20} color={theme.colors.primary} />
-          )}
         </View>
       </TouchableOpacity>
 
