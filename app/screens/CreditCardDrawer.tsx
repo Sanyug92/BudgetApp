@@ -6,9 +6,9 @@ import { CreditCard as CreditCardIcon, Edit3, X, Plus, ChevronUp, ChevronDown } 
 import { LinearGradient } from "expo-linear-gradient";
 import { useBudgetContext } from "@/context/BudgetContext";
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.8;
-const CARD_SPACING = 16;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const CARD_WIDTH = SCREEN_WIDTH * 0.8; // 80% of screen width
+
 const getRandomGradient = (seed: string | number) => {
   const colors = [
     ["#2563eb", "#1e40af"],

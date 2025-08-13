@@ -64,8 +64,6 @@ const config = {
  */
 export function App() {
   const {
-    initialNavigationState,
-    onNavigationStateChange,
     isRestored: isNavigationStateRestored,
   } = useNavigationPersistence(storage, NAVIGATION_PERSISTENCE_KEY)
 

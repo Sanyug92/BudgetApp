@@ -43,6 +43,8 @@ export function DrawerNavigator() {
         drawerStyle: {
           backgroundColor: theme.colors.surface,
           width: '75%',
+          zIndex: 1000, // Ensure drawer stays on top
+          elevation: 50, // Higher elevation for Android
         },
         drawerActiveTintColor: theme.colors.primary,
         drawerInactiveTintColor: theme.colors.onSurfaceVariant,

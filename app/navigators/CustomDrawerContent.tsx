@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { useTheme, Avatar, Text, Divider, Icon } from 'react-native-paper';
 import { useAuth } from '@/context/AuthContext';
@@ -33,10 +33,20 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
       contentContainerStyle={styles.container}
     >
       <View style={styles.header}>
-        <Avatar.Icon size={64} icon="account" style={styles.avatar} />
-        <Text variant="titleMedium" style={styles.userName}>
-          Credit Wise Budget
-        </Text>
+        <View style={styles.headerContent}>
+          <Text variant="titleMedium" style={styles.userName}>
+            Credit Wise Budget
+          </Text>
+          <TouchableOpacity 
+            onPress={() => props.navigation.closeDrawer()}
+            style={styles.closeButton}
+          >
+            <Icon
+              source="close"
+              size={24}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
       
       <Divider style={styles.divider} />
@@ -76,8 +86,17 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
+    paddingTop: 32,
+    paddingBottom: 16,
+  },
+  headerContent: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  closeButton: {
+    padding: 8,
+    margin: -8, // Offset the padding to align with the edge
   },
   avatar: {
     marginRight: 16,
