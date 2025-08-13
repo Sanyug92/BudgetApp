@@ -48,6 +48,7 @@ export const useBills = (userId?: string) => {
         'id' | 'created_at' | 'updated_at' | 'user_id' | 'status' | 'is_mandatory'
       >
     ) => {
+      console.log("bill useBill", bill)
       if (!userId) throw new Error('User not authenticated');
       const { type, ...billWithoutType } = bill;
       const updateBillData = {
@@ -57,6 +58,7 @@ export const useBills = (userId?: string) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
+      console.log("updateBillData useBill", updateBillData)
       try {
         const { data, error } = await supabase
           .from('bills')
@@ -119,8 +121,8 @@ export const useBills = (userId?: string) => {
         if ('type' in updates) {
           updateData.is_mandatory = updates.type === 'mandatory';
         }
-console.log("updateData type shit", updateData)
         if ('category' in updates) updateData.category = updates.category;
+        console.log("updateData type shit", updateData)
 
         const { data, error } = await supabase
           .from('bills')

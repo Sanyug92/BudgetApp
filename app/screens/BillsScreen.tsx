@@ -291,22 +291,20 @@ export function BillsScreen(): JSX.Element {
 
     try {
       if (new_is_paid) {
-        console.log("handleBillStatusChange paid", id, newStatus);
+        console.log("handleBillStatusChange paidxx", id, newStatus);
         setBillToPay(bill);
-        return;
       } else if (!new_is_paid) {
         console.log("handleBillStatusChange unpaid", id, newStatus);
         setBillToUnpay(bill);
         setNewDueDate(bill.due_date || 1);
-        return;
       }
-
+console.log("handleBillStatusChange hit", new_is_paid);
       const updates = {
         isPaid: new_is_paid,
         status: newStatus,
         updated_at: new Date().toISOString()
       };
-
+console.log("handleBillStatusChange updates", updates);
       const { error } = await updateBill(id, updates);
 
       if (error) {
@@ -410,33 +408,35 @@ console.log("handleUpdateBill", updatePayload, updates)
       </View>
   
       {/* Summary Cards - Horizontal Scroll */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        contentContainerStyle={styles.summaryContainer}
-      >
-        <View style={[styles.summaryCard, styles.mandatoryCard]}>
-          <Text style={styles.summaryCardTitle}>Mandatory</Text>
-          <Text style={styles.summaryCardAmount}>${mandatoryTotal.toLocaleString()}</Text>
-          <Text style={styles.summaryCardCount}>
-            {bills.filter(b => b.type === "mandatory").length} bills
-          </Text>
-        </View>
-  
-        <View style={[styles.summaryCard, styles.optionalCard]}>
-          <Text style={styles.summaryCardTitle}>Optional</Text>
-          <Text style={styles.summaryCardAmount}>${optionalTotal.toLocaleString()}</Text>
-          <Text style={styles.summaryCardCount}>
-            {bills.filter(b => b.type === "optional").length} bills
-          </Text>
-        </View>
-  
-        <View style={[styles.summaryCard, styles.totalCard]}>
+      <View>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.summaryContainer}
+        >
+          <View style={[styles.summaryCard, styles.mandatoryCard]}>
+            <Text style={styles.summaryCardTitle}>Mandatory</Text>
+            <Text style={styles.summaryCardAmount}>${mandatoryTotal.toLocaleString()}</Text>
+            <Text style={styles.summaryCardCount}>
+              {bills.filter(b => b.type === "mandatory").length} bills
+            </Text>
+          </View>
+    
+          <View style={[styles.summaryCard, styles.optionalCard]}>
+            <Text style={styles.summaryCardTitle}>Optional</Text>
+            <Text style={styles.summaryCardAmount}>${optionalTotal.toLocaleString()}</Text>
+            <Text style={styles.summaryCardCount}>
+              {bills.filter(b => b.type === "optional").length} bills
+            </Text>
+          </View>
+        </ScrollView>
+        
+        <View style={[styles.summaryCard, styles.totalCard, {width: '100%', marginTop: 16}]}>
           <Text style={styles.summaryCardTitle}>Total</Text>
           <Text style={styles.summaryCardAmount}>${(mandatoryTotal + optionalTotal).toLocaleString()}</Text>
           <Text style={styles.summaryCardCount}>All bills</Text>
         </View>
-      </ScrollView>
+      </View>
   
       {/* Filter Tabs */}
       <View style={styles.filterTabs}>
@@ -528,9 +528,12 @@ console.log("handleUpdateBill", updatePayload, updates)
               <View style={styles.billStatusContainer}>
                 <Switch
                   value={bill.is_paid}
-                  onValueChange={(checked) =>
+                  onValueChange={(checked) =>{
+                    console.log("handleBillStatusChange toggle", bill.id, checked ? "paid" : "unpaid")
                     handleBillStatusChange(bill.id, checked ? "paid" : "unpaid")
+                 
                   }
+                    }
                   trackColor={{
                     false: '#e5e7eb',
                     true: bill.type === 'mandatory' ? '#10b981' : '#3b82f6'
@@ -833,7 +836,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24
+    marginBottom: 24,
+    marginTop: 24
   },
   title: {
     fontSize: 28,
