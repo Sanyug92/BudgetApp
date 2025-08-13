@@ -5,6 +5,7 @@ import { Calendar, AlertCircle, CheckCircle2, Info, ChevronRight } from "lucide-
 import { NavigationProp } from "@react-navigation/native";
 import { useBudgetContext } from "@/context/BudgetContext";
 import { useAuth } from '@/context/AuthContext';
+import { Animated, PanResponder } from "react-native";
 
 interface WeeklyBudgetScreenProps {
   currentWeek: number;
@@ -33,7 +34,7 @@ interface BudgetTarget {
   isBest: boolean;
 }
 
-const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
+export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
   currentWeek,
   dayOfWeek,
   onTargetSelect,
@@ -45,6 +46,66 @@ const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
   const { user, loading: authLoading } = useAuth();
   const isInitialMount = useRef(true);
   const hasAutoSelected = useRef(false);
+
+  // Drawer animation
+  const drawerHeight = 300;
+  const minDrawerHeight = 80;
+  const pan = useRef(new Animated.Value(0)).current;
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const toggleDrawer = useCallback(() => {
+    Animated.spring(pan, {
+      toValue: isDrawerOpen ? 0 : 1,
+      useNativeDriver: false,
+    }).start();
+    setIsDrawerOpen(!isDrawerOpen);
+  }, [isDrawerOpen]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to vertical swipes
+        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx * 3);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          // Dragging down
+          pan.setValue(1 - Math.min(gestureState.dy / 300, 1));
+        } else {
+          // Dragging up
+          pan.setValue(Math.min(1, -gestureState.dy / 300));
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50) {
+          // Swipe down to close
+          Animated.spring(pan, { toValue: 0, useNativeDriver: false }).start();
+          setIsDrawerOpen(false);
+        } else if (gestureState.dy < -50) {
+          // Swipe up to open
+          Animated.spring(pan, { toValue: 1, useNativeDriver: false }).start();
+          setIsDrawerOpen(true);
+        } else {
+          // Return to previous state
+          Animated.spring(pan, {
+            toValue: isDrawerOpen ? 1 : 0,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  const drawerTranslateY = pan.interpolate({
+    inputRange: [0, 1],
+    outputRange: [drawerHeight - minDrawerHeight, 0],
+  });
+
+  const drawerHeightAnimated = pan.interpolate({
+    inputRange: [0, 1],
+    outputRange: [minDrawerHeight, drawerHeight],
+  });
 
   // Color definitions
   const colors = {
@@ -331,7 +392,10 @@ const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
   return (
     <View style={styles.container}>
       <ScrollView 
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={[
+          styles.scrollContainer,
+          { paddingBottom: minDrawerHeight + 20 } // Add padding for the drawer
+        ]}
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
@@ -365,6 +429,7 @@ const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
           .sort((a, b) => b.isBest ? 1 : -1) // Sort to put recommended card first
           .map(renderTargetCard)}
       </ScrollView>
+
     </View>
   );
 };
@@ -373,6 +438,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+    position: 'relative',
+  },
+  drawerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    overflow: 'hidden',
+  },
+  drawerHandleContainer: {
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  drawerHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#ccc',
+    borderRadius: 2,
+  },
+  drawerContent: {
+    flex: 1,
+    padding: 16,
   },
   scrollContainer: {
     padding: 16,

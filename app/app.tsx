@@ -101,11 +101,7 @@ export function App() {
           <BudgetProvider>
             <ThemeProvider>
               <PaperProvider>
-                <AppNavigator
-                  linking={linking}
-                  initialState={initialNavigationState}
-                  onStateChange={onNavigationStateChange}
-                />
+                <AppNavigator />
               </PaperProvider>
             </ThemeProvider>
           </BudgetProvider>

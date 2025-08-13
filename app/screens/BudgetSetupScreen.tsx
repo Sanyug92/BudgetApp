@@ -4,10 +4,19 @@ import { TextInput, Button, Card, Switch, Text, ActivityIndicator, Divider } fro
 import { DollarSign, PiggyBank, CreditCard, Trash2, Plus, ChevronDown, ChevronUp } from "lucide-react-native";
 import { useBudgetContext } from "@/context/BudgetContext";
 import type { Bill } from "@/types/bill.types";
-import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import type { NavigatorParamList } from "@/navigators/Navigator";
+import type { NavigationProp, RouteProp } from '@react-navigation/native';
 
-type Props = BottomTabScreenProps<NavigatorParamList, "Budget">;
+// Define the screen params
+type BudgetScreenParams = {
+  // Add any params you need to pass to this screen
+};
+
+// Make navigation and route props optional
+// This allows the component to be used both with and without navigation props
+type Props = {
+  navigation?: NavigationProp<any>;
+  route?: RouteProp<any>;
+} & BudgetScreenParams;
 
 const DEFAULT_BILL: Omit<Bill, "id"> = {
   name: "",
@@ -22,7 +31,8 @@ const DEFAULT_BILL: Omit<Bill, "id"> = {
   is_paid: false,
 };
 
-export default function BudgetSetupScreen({ }: Props) {
+const BudgetSetupScreen = (props: Props = {}) => {
+  const { navigation, route } = props;
   const { budgetData, bills: contextBills, updateBudgetData } = useBudgetContext();
 
   const [monthlyIncome, setMonthlyIncome] = useState(0);
@@ -220,9 +230,8 @@ export default function BudgetSetupScreen({ }: Props) {
             left={<TextInput.Affix text="$" />}
           />
         </View>
-      </ScrollView>
 
-      {/* Summary Section */}
+         {/* Summary Section */}
       {/* Summary card component */}
       <Card style={styles.summaryCard}>
         <Card.Title
@@ -317,6 +326,9 @@ export default function BudgetSetupScreen({ }: Props) {
           Save Budget
         </Button>
       </View>
+      </ScrollView>
+
+     
     </View>
   );
 }
@@ -523,3 +535,5 @@ const styles = StyleSheet.create({
     color: '#10b981',
   },
 });
+
+export default BudgetSetupScreen;
