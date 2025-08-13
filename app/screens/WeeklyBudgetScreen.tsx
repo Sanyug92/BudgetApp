@@ -361,7 +361,9 @@ const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
         {renderMonthlyProgressCard()}
         
         <Text style={styles.sectionTitle}>Choose Your Weekly Target</Text>
-        {targets.map(renderTargetCard)}
+        {[...targets]
+          .sort((a, b) => b.isBest ? 1 : -1) // Sort to put recommended card first
+          .map(renderTargetCard)}
       </ScrollView>
     </View>
   );
