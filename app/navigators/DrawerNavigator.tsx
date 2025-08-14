@@ -58,14 +58,14 @@ export function DrawerNavigator() {
         options={{ title: 'Dashboard' }}
       />
       <Drawer.Screen 
-        name="Bills" 
-        component={BillsScreen} 
-        options={{ title: 'My Bills' }}
-      />
-      <Drawer.Screen 
         name="Budget" 
         component={BudgetScreenWrapper} 
         options={{ title: 'Budget' }}
+      />
+      <Drawer.Screen 
+        name="Bills" 
+        component={BillsScreen} 
+        options={{ title: 'My Bills' }}
       />
     </Drawer.Navigator>
   );
