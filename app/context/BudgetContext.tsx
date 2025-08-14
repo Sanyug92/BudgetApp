@@ -12,6 +12,8 @@ export interface CreditCard {
   available: number;
   balance?: number; // Computed as limit - available
   lastUpdated: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BudgetContextType {
