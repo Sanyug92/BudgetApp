@@ -461,6 +461,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingBottom: 24, // Add bottom padding to ensure save button is accessible
   },
   addButton: {
     margin: 16,
