@@ -668,6 +668,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       console.log('Sending database updates:', dbUpdates);
       const result = await updateBill(id, dbUpdates);
       
+      
       // If the update was successful and we changed the due date, trigger a budget recalculation
       if (updates.due_date !== undefined) {
         await fetchAndCalculateBudget(user);

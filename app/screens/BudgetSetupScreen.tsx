@@ -208,32 +208,20 @@ const BudgetSetupScreen = (props: Props = {}) => {
 
   const handleBillStatusChange = async (id: string, newStatus: "unpaid" | "paid") => {
     const new_is_paid = newStatus === "paid";
-    // Update the UI optimistically
-    setBills(prev => prev.map(bill =>
-      bill.id === id
-        ? { ...bill, status: newStatus, is_paid: new_is_paid }
-        : bill
-    ));
-    console.log("handleBillStatusChange", id, newStatus);
+
     const bill = bills.find(b => b.id === id);
     if (!bill) return;
 
     try {
-      if (new_is_paid) {
-        console.log("handleBillStatusChange paidxx", id, newStatus);
-
-      } else if (!new_is_paid) {
-        console.log("handleBillStatusChange unpaid", id, newStatus);
-      }
-      console.log("handleBillStatusChange hit", new_is_paid);
       const updates = {
-        isPaid: new_is_paid,
+        is_paid: new_is_paid,  // Changed from isPaid to is_paid
         status: newStatus,
         updated_at: new Date().toISOString()
       };
-      console.log("handleBillStatusChange updates", updates);
-      const { error } = await updateBill(id, updates);
+      console.log("handleBillStatusChange", id, newStatus, updates);
 
+      const { error } = await updateBill(id, updates);
+console.log("handleBillStatusChange error", error);
       if (error) {
         // Revert the UI if the update fails
         console.error("Error updating bill status:", error);
@@ -265,8 +253,6 @@ const BudgetSetupScreen = (props: Props = {}) => {
 
     return format(dueDate, 'MMM do');
   };
-
-
 
   if (isLoading) {
     return (
@@ -398,15 +384,13 @@ const BudgetSetupScreen = (props: Props = {}) => {
                     </Text>
 
                     <View style={styles.billStatusContainer}>
-
                       <Switch
                         value={bill.is_paid}
                         onValueChange={(checked) => {
                           console.log("handleBillStatusChange toggle", bill.id, checked ? "paid" : "unpaid")
-                          handleBillStatusChange(bill.id, checked ? "paid" : "unpaid")
 
-                        }
-                        }
+                          handleBillStatusChange(bill.id, checked ? "paid" : "unpaid");
+                        }}
                         trackColor={{
                           false: '#e5e7eb',
                           true: bill.type === 'mandatory' ? '#10b981' : '#3b82f6'

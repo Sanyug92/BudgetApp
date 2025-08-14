@@ -94,8 +94,10 @@ export const useBills = (userId?: string) => {
 
         // Handle both camelCase and snake_case fields
         if ('isPaid' in updates) {
+          console.log("isPaid useBill", updates.isPaid)
           updateData.is_paid = updates.isPaid;
         } else if ('is_paid' in updates) {
+          console.log("is_paid useBill", updates.is_paid)
           updateData.is_paid = updates.is_paid;
         }
 
@@ -131,7 +133,7 @@ export const useBills = (userId?: string) => {
           .eq('user_id', userId)
           .select()
           .single();
-
+        console.log("updateBill data", data)
         if (error) throw error;
 
         // Transform the updated bill
