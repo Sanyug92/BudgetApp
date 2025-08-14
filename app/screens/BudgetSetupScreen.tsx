@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, FlatList, Modal, Alert, Switch, Keyboard } from "react-native";
-import { TextInput, Button, Text, ActivityIndicator, Divider, Menu, Portal, Dialog, Card } from "react-native-paper";
-import { DollarSign, PiggyBank, CreditCard, Plus, X, ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react-native";
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text as RNText, Alert, Switch, ActivityIndicator, FlatList, Modal, Keyboard } from 'react-native';
+import { Text, TextInput, Button, Surface, Divider, Menu, Portal, Dialog, Card, useTheme } from 'react-native-paper';
+import { DollarSign, PiggyBank, CreditCard, Plus, ChevronDown, ChevronUp, ChevronsUpDown, X } from "lucide-react-native";
 import { useBudgetContext } from "@/context/BudgetContext";
 import type { Bill } from "@/types/bill.types";
 import type { NavigationProp, RouteProp } from '@react-navigation/native';
@@ -39,7 +39,7 @@ const BudgetSetupScreen = (props: Props = {}) => {
   }
 
   const { budgetData, bills: contextBills, updateBudgetData } = context;
-  const { addBill, updateBill } = useBudgetContext();
+  const { addBill, updateBill, deleteBill } = useBudgetContext();
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [bills, setBills] = useState<Bill[]>([]);
   const [savingsGoal, setSavingsGoal] = useState(0);
@@ -142,22 +142,34 @@ const BudgetSetupScreen = (props: Props = {}) => {
   };
 
   const handleUpdateBill = async (id: string, updates: Partial<Bill>) => {
-
     try {
       const billToUpdate = bills.find(b => b.id === id);
       if (!billToUpdate) return;
 
-      const updatePayload = {
-        name: updates.name || billToUpdate.name,
+      const updatePayload: any = {
+        name: updates.name !== undefined ? updates.name : billToUpdate.name,
         amount: updates.amount !== undefined ? updates.amount : billToUpdate.amount,
         due_date: updates.due_date !== undefined ? updates.due_date : billToUpdate.due_date,
         is_mandatory: updates.type ? updates.type === "mandatory" : billToUpdate.type === "mandatory",
         type: updates.type || billToUpdate.type,
-        is_paid: updates.status ? updates.status === "paid" : billToUpdate.status === "paid",
-        paid_by_credit_card:
-          updates.paid_by_credit_card !== undefined ? updates.paid_by_credit_card : billToUpdate.paid_by_credit_card,
+        paid_by_credit_card: updates.paid_by_credit_card !== undefined 
+          ? updates.paid_by_credit_card 
+          : billToUpdate.paid_by_credit_card,
         updated_at: new Date().toISOString()
       };
+
+      // Handle is_paid and status updates
+      if (updates.is_paid !== undefined) {
+        updatePayload.is_paid = updates.is_paid;
+        updatePayload.status = updates.is_paid ? 'paid' : 'unpaid';
+      } else if (updates.status !== undefined) {
+        updatePayload.status = updates.status;
+        updatePayload.is_paid = updates.status === 'paid';
+      } else {
+        // If neither is_paid nor status is in updates, use the current values
+        updatePayload.is_paid = billToUpdate.is_paid;
+        updatePayload.status = billToUpdate.status;
+      }
       console.log("handleUpdateBill", updatePayload, updates)
       const { error } = await updateBill(id, updatePayload);
 
@@ -186,7 +198,7 @@ const BudgetSetupScreen = (props: Props = {}) => {
     }
   };
 
-  const handleDeleteBill = (id: string) => {
+  const handleDeleteBill = async (id: string) => {
     Alert.alert(
       "Delete Bill",
       "Are you sure you want to delete this bill?",
@@ -195,10 +207,21 @@ const BudgetSetupScreen = (props: Props = {}) => {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => {
-            setBills(prev => prev.filter(bill => bill.id !== id));
-            if (editingBill?.id === id) {
-              setEditingBill(null);
+          onPress: async () => {
+            try {
+              const { error } = await deleteBill(id);
+              if (!error) {
+                setBills(prev => prev.filter(bill => bill.id !== id));
+                if (editingBill?.id === id) {
+                  setEditingBill(null);
+                }
+              } else {
+                console.error("Error deleting bill:", error);
+                Alert.alert("Error", "Failed to delete the bill. Please try again.");
+              }
+            } catch (err) {
+              console.error("Error in handleDeleteBill:", err);
+              Alert.alert("Error", "An unexpected error occurred while deleting the bill.");
             }
           }
         }
@@ -355,7 +378,8 @@ console.log("handleBillStatusChange error", error);
               renderItem={({ item: bill }) => (
                 <TouchableOpacity
                   style={styles.billItem}
-                  onPress={() => setEditingBill(bill)}
+                  onPress={() => setEditingBill(JSON.parse(JSON.stringify(bill))) // makes a shallow copy
+                }
                 >
                   <View style={styles.billLeft}>
                     <View style={[
@@ -510,7 +534,16 @@ console.log("handleBillStatusChange error", error);
           {/* Edit Bill Modal */}
           <Portal>
             <Dialog visible={!!editingBill} onDismiss={() => setEditingBill(null)}>
-              <Dialog.Title>Edit Bill</Dialog.Title>
+              <View style={styles.dialogHeader}>
+                <Dialog.Title style={styles.dialogTitle}>Edit Bill</Dialog.Title>
+                <TouchableOpacity 
+                  onPress={() => setEditingBill(null)}
+                  style={styles.dialogCloseButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <X size={24} color="#6b7280" />
+                </TouchableOpacity>
+              </View>
               <Dialog.Content>
                 <TextInput
                   mode="outlined"
@@ -582,6 +615,33 @@ console.log("handleBillStatusChange error", error);
                     thumbColor="#ffffff"
                   />
                 </View>
+
+                <View style={[styles.switchContainer, { marginTop: 8 }]}>
+                  <Text style={styles.switchLabel}>Mark as Paid</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={[styles.billStatusText, { marginRight: 8 }]}>
+                      {editingBill?.is_paid ? 'Paid' : 'Unpaid'}
+                    </Text>
+                    <Switch
+                      value={editingBill?.is_paid || false}
+                      onValueChange={(value: boolean) => {
+                        if (editingBill) {
+                          const updatedBill: Bill = {
+                            ...editingBill,
+                            is_paid: value,
+                            status: value ? 'paid' as const : 'unpaid' as const
+                          };
+                          setEditingBill(updatedBill);
+                        }
+                      }}
+                      trackColor={{
+                        false: '#e5e7eb',
+                        true: editingBill?.type === 'mandatory' ? '#10b981' : '#3b82f6'
+                      }}
+                      thumbColor="#ffffff"
+                    />
+                  </View>
+                </View>
               </Dialog.Content>
               <Dialog.Actions>
                 <Button onPress={() => editingBill && handleDeleteBill(editingBill.id)} textColor="#ef4444">
@@ -596,6 +656,8 @@ console.log("handleBillStatusChange error", error);
                         amount: editingBill.amount,
                         due_date: editingBill.due_date,
                         type: editingBill.type,
+                        status: editingBill.is_paid ? 'paid' : 'unpaid',
+                        is_paid: editingBill.is_paid,
                         paid_by_credit_card: editingBill.paid_by_credit_card
                       });
                       setEditingBill(null);
@@ -1019,6 +1081,24 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#334155',
     fontSize: 14,
+  },
+  dialogActionButton: {
+    marginLeft: 8
+  },
+  dialogHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingRight: 16,
+    paddingTop: 8,
+  },
+  dialogTitle: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  dialogCloseButton: {
+    padding: 4,
+    borderRadius: 20,
   },
   recommendationButton: {
     marginLeft: 12,
