@@ -167,7 +167,7 @@ export function BillsScreen(): JSX.Element {
           due_date: 1,
           type: "mandatory",
           status: "unpaid",
-          paid_by_credit_card: false
+          paid_by_credit_card: true
         });
         setIsAddingBill(false);
       }
