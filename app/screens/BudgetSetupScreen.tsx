@@ -111,276 +111,279 @@ const BudgetSetupScreen = (props: Props = {}) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollViewRef}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Income Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <DollarSign size={20} color="#3b82f6" />
-            <Text style={styles.sectionTitle}>Monthly Income</Text>
+      <View style={{flex: 1}}>
+        <ScrollView 
+          ref={scrollViewRef} 
+          style={styles.scrollView} 
+          contentContainerStyle={[styles.scrollViewContent, {paddingBottom: 100}]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Income Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <DollarSign size={20} color="#3b82f6" />
+              <Text style={styles.sectionTitle}>Monthly Income</Text>
+            </View>
+            <Text style={styles.sectionDescription}>Your total monthly take-home income</Text>
+            <TextInput
+              mode="outlined"
+              label="Amount"
+              keyboardType="numeric"
+              value={monthlyIncome.toString()}
+              onChangeText={text => setMonthlyIncome(Number(text))}
+              style={styles.input}
+              left={<TextInput.Affix text="$" />}
+            />
           </View>
-          <Text style={styles.sectionDescription}>Your total monthly take-home income</Text>
-          <TextInput
-            mode="outlined"
-            label="Amount"
-            keyboardType="numeric"
-            value={monthlyIncome.toString()}
-            onChangeText={text => setMonthlyIncome(Number(text))}
-            style={styles.input}
-            left={<TextInput.Affix text="$" />}
-          />
-        </View>
 
-        {/* Bills Section */}
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => setIsBillsSectionOpen(prev => !prev)}
-          >
-            <CreditCard size={20} color="#3b82f6" />
-            <Text style={styles.sectionTitle}>Monthly Bills</Text>
-            {isBillsSectionOpen ? (
-              <ChevronUp size={20} color="#64748b" style={{ marginLeft: 'auto' }} />
-            ) : (
-              <ChevronDown size={20} color="#64748b" style={{ marginLeft: 'auto' }} />
-            )}
-          </TouchableOpacity>
+          {/* Bills Section */}
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => setIsBillsSectionOpen(prev => !prev)}
+            >
+              <CreditCard size={20} color="#3b82f6" />
+              <Text style={styles.sectionTitle}>Monthly Bills</Text>
+              {isBillsSectionOpen ? (
+                <ChevronUp size={20} color="#64748b" style={{ marginLeft: 'auto' }} />
+              ) : (
+                <ChevronDown size={20} color="#64748b" style={{ marginLeft: 'auto' }} />
+              )}
+            </TouchableOpacity>
 
-          {isBillsSectionOpen && (
-            <>
-              <FlatList
-                data={bills}
-                scrollEnabled={false}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item: bill, index }) => (
-                  <View
-                    style={styles.billCard}
-                    ref={(ref) => {
-                      billItemRefs.current[bill.id] = ref;
-                    }}
-                    collapsable={false} // Important for Android measurement
-                  >
-                    <TouchableOpacity
-                      style={styles.billHeader}
-                      onPress={() => toggleBillExpansion(index)}
+            {isBillsSectionOpen && (
+              <>
+                <FlatList
+                  data={bills}
+                  scrollEnabled={false}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item: bill, index }) => (
+                    <View
+                      style={styles.billCard}
+                      ref={(ref) => {
+                        billItemRefs.current[bill.id] = ref;
+                      }}
+                      collapsable={false} // Important for Android measurement
                     >
-                      <Text style={styles.billName}>
-                        {bill.name || "New Bill"}
-                      </Text>
-                      <View style={styles.billHeaderRight}>
-                        <Text style={styles.billAmount}>
-                          ${bill.amount ? bill.amount.toFixed(2) : "0.00"}
+                      <TouchableOpacity
+                        style={styles.billHeader}
+                        onPress={() => toggleBillExpansion(index)}
+                      >
+                        <Text style={styles.billName}>
+                          {bill.name || "New Bill"}
                         </Text>
-                        {expandedBillIndex === index ? (
-                          <ChevronUp size={20} color="#64748b" />
-                        ) : (
-                          <ChevronDown size={20} color="#64748b" />
-                        )}
-                      </View>
-                    </TouchableOpacity>
-
-                    {expandedBillIndex === index && (
-                      <View style={styles.billDetails}>
-                        <TextInput
-                          mode="outlined"
-                          label="Bill Name"
-                          value={bill.name}
-                          onChangeText={text => handleBillChange(index, "name", text)}
-                          style={styles.input}
-                        />
-                        <TextInput
-                          mode="outlined"
-                          label="Amount"
-                          keyboardType="numeric"
-                          value={bill.amount.toString()}
-                          onChangeText={text => handleBillChange(index, "amount", Number(text))}
-                          style={styles.input}
-                          left={<TextInput.Affix text="$" />}
-                        />
-                        <TextInput
-                          mode="outlined"
-                          label="Due Date (Day of Month)"
-                          keyboardType="numeric"
-                          value={bill.due_date.toString()}
-                          onChangeText={text => handleBillChange(index, "due_date", Number(text))}
-                          style={styles.input}
-                        />
-                        <View style={styles.dropdownContainer}>
-                          <Text style={styles.dropdownLabel}>Bill Type</Text>
-                          <Menu
-                            visible={expandedBillIndex === index && showBillTypeMenu}
-                            onDismiss={() => setShowBillTypeMenu(false)}
-                            anchor={
-                              <TouchableOpacity
-                                style={styles.dropdownButton}
-                                onPress={() => {
-                                  setExpandedBillIndex(index);
-                                  setShowBillTypeMenu(true);
-                                }}
-                              >
-                                <Text style={styles.dropdownButtonText}>
-                                  {bill.type === 'mandatory' ? 'Mandatory' : 'Optional'}
-                                </Text>
-                                <ChevronsUpDown size={16} color="#64748b" />
-                              </TouchableOpacity>
-                            }
-                          >
-                            <Menu.Item
-                              onPress={() => {
-                                handleBillChange(index, "type", "mandatory");
-                                setShowBillTypeMenu(false);
-                              }}
-                              title="Mandatory"
-                              style={bill.type === 'mandatory' ? styles.menuItemActive : {}}
-                              titleStyle={bill.type === 'mandatory' ? styles.menuItemTextActive : {}}
-                            />
-                            <Divider />
-                            <Menu.Item
-                              onPress={() => {
-                                handleBillChange(index, "type", "optional");
-                                setShowBillTypeMenu(false);
-                              }}
-                              title="Optional"
-                              style={bill.type === 'optional' ? styles.menuItemActive : {}}
-                              titleStyle={bill.type === 'optional' ? styles.menuItemTextActive : {}}
-                            />
-                          </Menu>
+                        <View style={styles.billHeaderRight}>
+                          <Text style={styles.billAmount}>
+                            ${bill.amount ? bill.amount.toFixed(2) : "0.00"}
+                          </Text>
+                          {expandedBillIndex === index ? (
+                            <ChevronUp size={20} color="#64748b" />
+                          ) : (
+                            <ChevronDown size={20} color="#64748b" />
+                          )}
                         </View>
-                        <View style={[styles.switchRow, { marginTop: 8 }]}>
-                          <Text style={styles.switchLabel}>Paid by Credit Card</Text>
-                          <Switch
-                            value={bill.paid_by_credit_card}
-                            onValueChange={val => handleBillChange(index, "paid_by_credit_card", val)}
-                            color="#3b82f6"
+                      </TouchableOpacity>
+
+                      {expandedBillIndex === index && (
+                        <View style={styles.billDetails}>
+                          <TextInput
+                            mode="outlined"
+                            label="Bill Name"
+                            value={bill.name}
+                            onChangeText={text => handleBillChange(index, "name", text)}
+                            style={styles.input}
                           />
+                          <TextInput
+                            mode="outlined"
+                            label="Amount"
+                            keyboardType="numeric"
+                            value={bill.amount.toString()}
+                            onChangeText={text => handleBillChange(index, "amount", Number(text))}
+                            style={styles.input}
+                            left={<TextInput.Affix text="$" />}
+                          />
+                          <TextInput
+                            mode="outlined"
+                            label="Due Date (Day of Month)"
+                            keyboardType="numeric"
+                            value={bill.due_date.toString()}
+                            onChangeText={text => handleBillChange(index, "due_date", Number(text))}
+                            style={styles.input}
+                          />
+                          <View style={styles.dropdownContainer}>
+                            <Text style={styles.dropdownLabel}>Bill Type</Text>
+                            <Menu
+                              visible={expandedBillIndex === index && showBillTypeMenu}
+                              onDismiss={() => setShowBillTypeMenu(false)}
+                              anchor={
+                                <TouchableOpacity
+                                  style={styles.dropdownButton}
+                                  onPress={() => {
+                                    setExpandedBillIndex(index);
+                                    setShowBillTypeMenu(true);
+                                  }}
+                                >
+                                  <Text style={styles.dropdownButtonText}>
+                                    {bill.type === 'mandatory' ? 'Mandatory' : 'Optional'}
+                                  </Text>
+                                  <ChevronsUpDown size={16} color="#64748b" />
+                                </TouchableOpacity>
+                              }
+                            >
+                              <Menu.Item
+                                onPress={() => {
+                                  handleBillChange(index, "type", "mandatory");
+                                  setShowBillTypeMenu(false);
+                                }}
+                                title="Mandatory"
+                                style={bill.type === 'mandatory' ? styles.menuItemActive : {}}
+                                titleStyle={bill.type === 'mandatory' ? styles.menuItemTextActive : {}}
+                              />
+                              <Divider />
+                              <Menu.Item
+                                onPress={() => {
+                                  handleBillChange(index, "type", "optional");
+                                  setShowBillTypeMenu(false);
+                                }}
+                                title="Optional"
+                                style={bill.type === 'optional' ? styles.menuItemActive : {}}
+                                titleStyle={bill.type === 'optional' ? styles.menuItemTextActive : {}}
+                              />
+                            </Menu>
+                          </View>
+                          <View style={[styles.switchRow, { marginTop: 8 }]}>
+                            <Text style={styles.switchLabel}>Paid by Credit Card</Text>
+                            <Switch
+                              value={bill.paid_by_credit_card}
+                              onValueChange={val => handleBillChange(index, "paid_by_credit_card", val)}
+                              color="#3b82f6"
+                            />
+                          </View>
+                          <Button
+                            mode="outlined"
+                            onPress={() => handleDeleteBill(index)}
+                            textColor="#ef4444"
+                            style={styles.deleteButton}
+                          >
+                            Remove Bill
+                          </Button>
                         </View>
-                        <Button
-                          mode="outlined"
-                          onPress={() => handleDeleteBill(index)}
-                          textColor="#ef4444"
-                          style={styles.deleteButton}
-                        >
-                          Remove Bill
-                        </Button>
-                      </View>
-                    )}
-                  </View>
-                )}
-              />
+                      )}
+                    </View>
+                  )}
+                />
 
-              <Button
-                mode="contained-tonal"
-                onPress={handleAddBill}
-                style={styles.addButton}
-                icon={() => <Plus size={20} color="#3b82f6" />}
-              >
-                Add Bill
-              </Button>
-            </>
-          )}
-        </View>
-
-        {/* Savings Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <PiggyBank size={20} color="#3b82f6" />
-            <Text style={styles.sectionTitle}>Monthly Savings Goal</Text>
+                <Button
+                  mode="contained-tonal"
+                  onPress={handleAddBill}
+                  style={styles.addButton}
+                  icon={() => <Plus size={20} color="#3b82f6" />}
+                >
+                  Add Bill
+                </Button>
+              </>
+            )}
           </View>
-          <Text style={styles.sectionDescription}>
-            How much you want to save each month
-          </Text>
 
-          {monthlyIncome > 0 && (
-            <View style={styles.recommendationContainer}>
-              <Text style={styles.recommendationText}>
-                Save 20% of your monthly income: ${Math.round(monthlyIncome * 0.2).toLocaleString()}
-              </Text>
+          {/* Savings Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <PiggyBank size={20} color="#3b82f6" />
+              <Text style={styles.sectionTitle}>Monthly Savings Goal</Text>
             </View>
-          )}
+            <Text style={styles.sectionDescription}>
+              How much you want to save each month
+            </Text>
 
-          <TextInput
-            mode="outlined"
-            label="Amount"
-            keyboardType="numeric"
-            value={savingsGoal.toString()}
-            onChangeText={text => setSavingsGoal(Number(text))}
-            style={styles.input}
-            left={<TextInput.Affix text="$" />}
-          />
-        </View>
-
-        {/* Summary Section */}
-        <Card style={styles.summaryCard}>
-          <Card.Title
-            title="Budget Summary"
-            subtitle="Your zero-based budget breakdown"
-            titleStyle={styles.summaryTitle}
-            subtitleStyle={styles.summarySubtitle}
-          />
-          <Card.Content>
-            <View style={styles.summaryGrid}>
-              <View style={styles.summaryGridItem}>
-                <Text style={styles.summaryLabel}>Monthly Income</Text>
-                <Text style={[styles.summaryValue, styles.primaryText]}>
-                  ${monthlyIncome.toFixed(2)}
+            {monthlyIncome > 0 && (
+              <View style={styles.recommendationContainer}>
+                <Text style={styles.recommendationText}>
+                  Save 20% of your monthly income: ${Math.round(monthlyIncome * 0.2).toLocaleString()}
                 </Text>
               </View>
-              <View style={styles.summaryGridItem}>
-                <Text style={styles.summaryLabel}>Total Committed</Text>
-                <Text style={styles.summaryValue}>
-                  ${totalCommitted.toFixed(2)}
-                </Text>
-              </View>
-            </View>
+            )}
 
-            <Divider style={styles.divider} />
+            <TextInput
+              mode="outlined"
+              label="Amount"
+              keyboardType="numeric"
+              value={savingsGoal.toString()}
+              onChangeText={text => setSavingsGoal(Number(text))}
+              style={styles.input}
+              left={<TextInput.Affix text="$" />}
+            />
+          </View>
 
-            <View style={styles.summaryList}>
-              <View style={styles.summaryListItem}>
-                <Text>Mandatory Bills:</Text>
-                <Text style={[styles.summaryListValue, styles.destructiveText]}>
-                  ${totalMandatory.toFixed(2)}
-                </Text>
+          {/* Summary Section */}
+          <Card style={styles.summaryCard}>
+            <Card.Title
+              title="Budget Summary"
+              subtitle="Your zero-based budget breakdown"
+              titleStyle={styles.summaryTitle}
+              subtitleStyle={styles.summarySubtitle}
+            />
+            <Card.Content>
+              <View style={styles.summaryGrid}>
+                <View style={styles.summaryGridItem}>
+                  <Text style={styles.summaryLabel}>Monthly Income</Text>
+                  <Text style={[styles.summaryValue, styles.primaryText]}>
+                    ${monthlyIncome.toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.summaryGridItem}>
+                  <Text style={styles.summaryLabel}>Total Committed</Text>
+                  <Text style={styles.summaryValue}>
+                    ${totalCommitted.toFixed(2)}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.summaryListItem}>
-                <Text>Optional Bills:</Text>
-                <Text style={[styles.summaryListValue, styles.warningText]}>
-                  ${totalOptional.toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.summaryListItem}>
-                <Text>Savings Goal:</Text>
-                <Text style={[styles.summaryListValue, styles.successText]}>
-                  ${savingsGoal.toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.summaryListItem}>
-                <Text>Discretionary Spent:</Text>
-                <Text style={[styles.summaryListValue, styles.destructiveText]}>
-                  ${budgetData?.discretionarySpent?.toFixed(2) || '0.00'}
-                </Text>
-              </View>
-            </View>
 
-            <Divider style={styles.divider} />
+              <Divider style={styles.divider} />
 
-            <View style={styles.discretionaryRow}>
-              <Text style={styles.discretionaryLabel}>
-                Available for Discretionary Spending:
-              </Text>
-              <Text style={[
-                styles.discretionaryValue,
-                remainingForDiscretionary >= 0 ? styles.successText : styles.destructiveText
-              ]}>
-                ${remainingForDiscretionary.toFixed(2)}
-              </Text>
-            </View>
-          </Card.Content>
-        </Card>
+              <View style={styles.summaryList}>
+                <View style={styles.summaryListItem}>
+                  <Text>Mandatory Bills:</Text>
+                  <Text style={[styles.summaryListValue, styles.destructiveText]}>
+                    ${totalMandatory.toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.summaryListItem}>
+                  <Text>Optional Bills:</Text>
+                  <Text style={[styles.summaryListValue, styles.warningText]}>
+                    ${totalOptional.toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.summaryListItem}>
+                  <Text>Savings Goal:</Text>
+                  <Text style={[styles.summaryListValue, styles.successText]}>
+                    ${savingsGoal.toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.summaryListItem}>
+                  <Text>Discretionary Spent:</Text>
+                  <Text style={[styles.summaryListValue, styles.destructiveText]}>
+                    ${budgetData?.discretionarySpent?.toFixed(2) || '0.00'}
+                  </Text>
+                </View>
+              </View>
+
+              <Divider style={styles.divider} />
+
+              <View style={styles.discretionaryRow}>
+                <Text style={styles.discretionaryLabel}>
+                  Available for Discretionary Spending:
+                </Text>
+                <Text style={[
+                  styles.discretionaryValue,
+                  remainingForDiscretionary >= 0 ? styles.successText : styles.destructiveText
+                ]}>
+                  ${remainingForDiscretionary.toFixed(2)}
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+        </ScrollView>
 
         {/* Sticky Save Button - moved outside ScrollView */}
         <View style={styles.footer}>
@@ -408,10 +411,7 @@ const BudgetSetupScreen = (props: Props = {}) => {
             Save Budget
           </Button>
         </View>
-      </ScrollView>
-
-
-
+      </View>
     </View>
   );
 };
@@ -421,9 +421,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
-  scrollContent: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
     padding: 16,
-    paddingBottom: 160, // Increased bottom padding to create more space above the save button
   },
   section: {
     backgroundColor: 'white',
@@ -531,20 +533,11 @@ const styles = StyleSheet.create({
   deleteButton: { borderColor: '#fee2e2', backgroundColor: '#fee2e2' },
   addButton: { marginTop: 8, borderColor: '#e0f2fe', backgroundColor: '#e0f2fe' },
   footer: {
-    position: 'absolute',
-    bottom: 160, // Position above the CreditCardDrawer
-    left: 0,
-    right: 0,
     padding: 16,
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
-    zIndex: 1000,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginBottom: 100, // Add margin to account for the CreditCardDrawer
   },
   saveButton: { borderRadius: 8, paddingVertical: 8, backgroundColor: '#3b82f6' },
   saveButtonLabel: { fontSize: 16, fontWeight: '600' },
