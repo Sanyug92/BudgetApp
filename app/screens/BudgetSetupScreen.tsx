@@ -428,7 +428,7 @@ const BudgetSetupScreen = (props: Props = {}) => {
             </Button>
           </View>
 
-          // Replace the existing modals with these new ones
+          {/* Replace the existing modals with these new ones */}
           {/* Add Bill Modal */}
           <Modal
             visible={isAddingBill}
