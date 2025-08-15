@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.anonymous.icongenerator"
+  },
+  "ios": {
+    "bundleIdentifier": "com.anonymous.icongenerator"
+  }
+}

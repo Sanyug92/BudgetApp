@@ -1,0 +1,17 @@
+{
+  "name": "icon-generator",
+  "version": "1.0.0",
+  "description": "Script to generate app icons in various sizes",
+  "main": "generate-icons.js",
+  "scripts": {
+    "generate": "node generate-icons.js",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
+  },
+  "dependencies": {
+    "sharp": "^0.33.3",
+    "expo": "~53.0.20",
+    "react": "19.0.0",
+    "react-native": "0.79.5"
+  }
+}

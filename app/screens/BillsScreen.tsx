@@ -1,24 +1,15 @@
 import React, { JSX, useEffect, useState } from "react";
-import { View, FlatList, StyleSheet, ScrollView, Pressable, Alert, TouchableOpacity } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { View, FlatList, StyleSheet, ScrollView, Alert, TouchableOpacity } from "react-native";
 import {
-  Card,
-  Portal,
   TextInput,
   Switch,
-  Button as PaperButton,
-  Title,
   Text,
-  Badge,
-  Dialog,
-  SegmentedButtons,
-  IconButton
 } from "react-native-paper";
 import { Modal } from 'react-native';
 
 import Icon from "react-native-vector-icons/Feather";
 import { Bill } from "@/types/bill.types";
-import { BudgetData, useBudgetContext } from "@/context/BudgetContext";
+import { useBudgetContext } from "@/context/BudgetContext";
 import { format } from "date-fns";
 
 export function BillsScreen(): JSX.Element {
@@ -176,106 +167,6 @@ export function BillsScreen(): JSX.Element {
     }
   };
 
-  const handlePaidDateSubmit = async () => {
-    if (!billToPay) return;
-
-    try {
-      const paidDateObj = new Date(paidDate);
-      const dayOfMonth = paidDateObj.getDate();
-
-      const updates = {
-        isPaid: true,
-        dueDate: dayOfMonth,
-        paid_by_credit_card: billToPay.paid_by_credit_card,
-        status: "paid" as const,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await updateBill(billToPay.id, updates);
-
-      if (error) {
-        console.error("Error updating bill:", error);
-        return;
-      }
-
-      setBills(prev =>
-        prev.map(b =>
-          b.id === billToPay.id
-            ? {
-              ...b,
-              is_paid: true,
-              due_date: dayOfMonth,
-              status: "paid",
-              paid_by_credit_card: billToPay.paid_by_credit_card
-            }
-            : b
-        )
-      );
-
-      setBillToPay(null);
-      setPaidDate(format(new Date(), "yyyy-MM-dd"));
-    } catch (err) {
-      console.error("Error in handlePaidDateSubmit:", err);
-    }
-  };
-
-  const handlePaidByCreditCardToggle = async (id: string, currentValue: boolean) => {
-    const newValue = !currentValue;
-    try {
-      const updates = {
-        paid_by_credit_card: newValue,
-        updated_at: new Date().toISOString()
-      };
-
-      const { data: updatedBill, error } = await updateBill(id, updates);
-
-      if (error) {
-        console.error("Error updating paid by credit card status:", error);
-        return;
-      }
-
-      setBills(prev =>
-        prev.map(b => (b.id === id ? { ...b, paid_by_credit_card: newValue } : b))
-      );
-    } catch (err) {
-      console.error("Error in handlePaidByCreditCardToggle:", err);
-    }
-  };
-
-  const handleUnpaidDateSubmit = async () => {
-    if (!billToUnpay) return;
-
-    try {
-      const updates = {
-        due_date: newDueDate,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await updateBill(billToUnpay.id, updates);
-
-      if (error) {
-        console.error("Error updating bill status:", error);
-        return;
-      }
-
-      setBills(prev =>
-        prev.map(b =>
-          b.id === billToUnpay.id
-            ? {
-              ...b,
-              due_date: newDueDate,
-            }
-            : b
-        )
-      );
-      setBillToUnpay(null);
-      setNewDueDate(1);
-    } catch (err) {
-      console.error("Error in handleUnpaidDateSubmit:", err);
-    }
-  };
-
-
 
   const handleBillStatusChange = async (id: string, newStatus: "unpaid" | "paid") => {
     const new_is_paid = newStatus === "paid";
@@ -379,16 +270,6 @@ console.log("handleUpdateBill", updatePayload, updates)
     return dueDate.toLocaleDateString("en-US", { month: "long", day: "numeric" });
   };
 
-  const getStatusColor = (status: Bill["status"]) => {
-    switch (status) {
-      case "paid":
-        return { backgroundColor: "#10b981", color: "white" };
-      case "unpaid":
-        return { backgroundColor: "#ef4444", color: "white" };
-      default:
-        return { backgroundColor: "#f59e0b", color: "black" };
-    }
-  };
 
   return (
     <View style={styles.root}>

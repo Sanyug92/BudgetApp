@@ -1,11 +1,16 @@
 {
-  "name": "bugetApp",
-  "slug": "bugetApp",
+  "name": "dailydough",
+  "slug": "dailydough",
   "scheme": "bugetapp",
   "version": "1.0.0",
   "orientation": "portrait",
   "userInterfaceStyle": "automatic",
   "icon": "./assets/images/app-icon-all.png",
+  "splash": {
+    "image": "./app-icon-large.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#ffcf4c"
+  },
   "updates": {
     "fallbackToCacheTimeout": 0
   },
@@ -39,10 +44,9 @@
     [
       "expo-splash-screen",
       {
-        "image": "./assets/images/app-icon-android-adaptive-foreground.png",
-        "imageWidth": 300,
+        "image": "./app-icon-large.png",
         "resizeMode": "contain",
-        "backgroundColor": "#191015"
+        "backgroundColor": "#ffcf4c"
       }
     ],
     [

@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
-import { Card, Title, Paragraph, Chip, ProgressBar, useTheme } from "react-native-paper";
+import { Card, ProgressBar, useTheme } from "react-native-paper";
 import { Calendar, AlertCircle, CheckCircle2, Info, X, ChevronRight } from "lucide-react-native";
 import { NavigationProp } from "@react-navigation/native";
 import { useBudgetContext } from "@/context/BudgetContext";
 import { useAuth } from '@/context/AuthContext';
-import { Animated, PanResponder } from "react-native";
+import { Animated } from "react-native";
 interface WeeklyBudgetScreenProps {
   currentWeek: number;
   dayOfWeek: number;
@@ -34,8 +34,7 @@ interface BudgetTarget {
 }
 
 export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
-  currentWeek,
-  dayOfWeek,
+  
   onTargetSelect,
   selectedTarget,
 }) => {
@@ -43,70 +42,13 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
   const { budgetData, loading, error, fetchAndCalculateBudget } = useBudgetContext();
   const [refreshing, setRefreshing] = useState(false);
   const [showInfoCard, setShowInfoCard] = useState(true);
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const isInitialMount = useRef(true);
   const hasAutoSelected = useRef(false);
 
   // Drawer animation
-  const drawerHeight = 300;
   const minDrawerHeight = 80;
-  const pan = useRef(new Animated.Value(0)).current;
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  const toggleDrawer = useCallback(() => {
-    Animated.spring(pan, {
-      toValue: isDrawerOpen ? 0 : 1,
-      useNativeDriver: false,
-    }).start();
-    setIsDrawerOpen(!isDrawerOpen);
-  }, [isDrawerOpen]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only respond to vertical swipes
-        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx * 3);
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          // Dragging down
-          pan.setValue(1 - Math.min(gestureState.dy / 300, 1));
-        } else {
-          // Dragging up
-          pan.setValue(Math.min(1, -gestureState.dy / 300));
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 50) {
-          // Swipe down to close
-          Animated.spring(pan, { toValue: 0, useNativeDriver: false }).start();
-          setIsDrawerOpen(false);
-        } else if (gestureState.dy < -50) {
-          // Swipe up to open
-          Animated.spring(pan, { toValue: 1, useNativeDriver: false }).start();
-          setIsDrawerOpen(true);
-        } else {
-          // Return to previous state
-          Animated.spring(pan, {
-            toValue: isDrawerOpen ? 1 : 0,
-            useNativeDriver: false,
-          }).start();
-        }
-      },
-    })
-  ).current;
-
-  const drawerTranslateY = pan.interpolate({
-    inputRange: [0, 1],
-    outputRange: [drawerHeight - minDrawerHeight, 0],
-  });
-
-  const drawerHeightAnimated = pan.interpolate({
-    inputRange: [0, 1],
-    outputRange: [minDrawerHeight, drawerHeight],
-  });
-
+  
   // Color definitions
   const colors = {
     success: '#10b981',
@@ -152,16 +94,6 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
       </View>
     );
   }
-
-  const getCurrentWeekLabel = (): string => {
-    const weekLabels = ["First Week", "Second Week", "Third Week", "Fourth Week"];
-    return weekLabels[Math.min(Math.max(currentWeek - 1, 0), 3)] || `Week ${currentWeek}`;
-  };
-
-  const getDayOfWeekLabel = (): string => {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    return days[Math.min(Math.max(dayOfWeek, 0), 6)] || `Day ${dayOfWeek + 1}`;
-  };
 
   const getWeeklyBudgetScenarios = (): BudgetTarget[] => {
     const { discretionLimit, discretionaryLeft } = budgetData || { discretionLimit: 0, discretionaryLeft: 0 };
@@ -409,25 +341,25 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
         </View>
 
         {showInfoCard && (
-          <Card style={[styles.card, styles.infoCard]}>
-            <View style={styles.cardHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Info size={20} color={theme.colors.primary} />
-                <Text style={styles.cardTitle}>How it works</Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setShowInfoCard(false)}
-                style={styles.closeButton}
-              >
-                <X size={20} color="#6b7280" />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.infoText}>
-              We crunch your numbers and turn them into five spending 'vibes' — from Main Character Money to Card Declined Era.
-              Each week, you'll get a weekly budget, your daily budget, and get a heads-up before you start spending money you don't have.
-            </Text>
-          </Card>
-        )}
+  <Card style={[styles.card, styles.infoCard]}>
+    <View style={styles.cardHeader}>
+      <View style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
+        <Info size={20} color={theme.colors.primary} />
+        <Text style={styles.cardTitle}>How it works</Text>
+      </View>
+      <TouchableOpacity 
+        onPress={() => setShowInfoCard(false)}
+        style={styles.closeButton}
+      >
+        <X size={20} color="#6b7280" />
+      </TouchableOpacity>
+    </View>
+    <Text style={styles.infoText}>
+      We crunch your numbers and turn them into five spending 'vibes' — from Main Character Money to Card Declined Era.
+      Each week, you'll get a weekly budget, your daily budget, and get a heads-up before you start spending money you don't have.
+    </Text>
+  </Card>
+)}
 
         {renderMonthlyProgressCard()}
 

@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Animated, PanResponder, Dimensions, FlatList, Alert } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Animated, PanResponder, Dimensions, Alert } from "react-native";
 import { Text, Card, Button, TextInput, ActivityIndicator, useTheme } from "react-native-paper";
 import { formatDistanceToNow } from "date-fns";
-import { CreditCard as CreditCardIcon, Edit3, X, Plus, Info } from "lucide-react-native";
+import { CreditCard as CreditCardIcon, Edit3, X, Plus } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CreditCard, useBudgetContext } from "@/context/BudgetContext";
 import ReanimatedCarousel from "react-native-reanimated-carousel";
@@ -52,8 +52,7 @@ export function CreditCardDrawer() {
   const [tempLimit, setTempLimit] = useState("");
   const [tempAvailable, setTempAvailable] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const scrollViewRef = useRef<FlatList<any>>(null);
-
+ 
   // Adjusted heights for better mobile experience
   const MIN_DRAWER_HEIGHT = 100; // More compact minimum height
   const MAX_DRAWER_HEIGHT = Dimensions.get('window').height * 0.6; // More space for cards
@@ -128,34 +127,6 @@ export function CreditCardDrawer() {
       ]
     );
   };
-
-  // const handleAddCard = async () => {
-  //   if (loading) return;
-
-  //   const newCard = {
-  //     name: 'New Credit Card',
-  //     limit: 0,
-  //     available: 0,
-  //     lastUpdated: new Date().toISOString(),
-  //   };
-
-  //   try {
-  //     await addCreditCard(newCard);
-  //     // After adding the card, find its index and scroll to it
-  //     const newCardIndex = displayCards.length; // New card will be at the end
-  //     setTimeout(() => {
-  //       if (scrollViewRef.current) {
-  //         scrollViewRef.current.scrollToIndex({
-  //           index: newCardIndex,
-  //           animated: true,
-  //           viewPosition: 0.5 // Center the new card
-  //         });
-  //       }
-  //     }, 300); // Small delay to ensure the card is rendered
-  //   } catch (err) {
-  //     console.error('Error adding card:', err);
-  //   }
-  // };
 
   const handleAddCard = async () => {
     if (loading) return;

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text as RNText, Alert, Switch, ActivityIndicator, FlatList, Modal, Keyboard } from 'react-native';
-import { Text, TextInput, Button, Checkbox, Surface, Divider, Menu, Portal, Dialog, Card, useTheme } from 'react-native-paper';
-import { DollarSign, PiggyBank, CreditCard, Plus, ChevronDown, ChevronUp, ChevronsUpDown, X } from "lucide-react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, ScrollView, StyleSheet, TouchableOpacity, Alert, Switch, ActivityIndicator, FlatList, Modal, Keyboard } from 'react-native';
+import { Text, TextInput, Button, Checkbox, Divider, Card } from 'react-native-paper';
+import { DollarSign, PiggyBank, CreditCard, Plus, X } from "lucide-react-native";
 import { useBudgetContext } from "@/context/BudgetContext";
 import type { Bill } from "@/types/bill.types";
 import type { NavigationProp, RouteProp } from '@react-navigation/native';
@@ -13,18 +13,6 @@ type Props = {
   route?: RouteProp<any>;
 } & BudgetScreenParams;
 
-const DEFAULT_BILL: Omit<Bill, "id"> = {
-  name: "",
-  amount: 0,
-  due_date: 1,
-  paid_by_credit_card: true,
-  type: "mandatory",
-  status: "unpaid",
-  user_id: "current-user-id",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  is_paid: false,
-};
 
 const BudgetSetupScreen = (props: Props = {}) => {
   const context = useBudgetContext();
@@ -45,7 +33,6 @@ const BudgetSetupScreen = (props: Props = {}) => {
   const [savingsGoal, setSavingsGoal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isBillsSectionOpen, setIsBillsSectionOpen] = useState(true);
   const [isAddingBill, setIsAddingBill] = useState(false);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [filterType, setFilterType] = useState<"all" | "mandatory" | "optional">("all");
@@ -69,7 +56,6 @@ const BudgetSetupScreen = (props: Props = {}) => {
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const billItemRefs = useRef<{ [key: string]: View | null }>({});
   const handleAddNewBill = () => {
     setNewBill({
       name: "",
@@ -86,13 +72,6 @@ const BudgetSetupScreen = (props: Props = {}) => {
     setIsAddingBill(true);
   };
 
-  const handleBillChange = (id: string, updates: Partial<Bill>) => {
-    setBills(prev =>
-      prev.map(bill =>
-        bill.id === id ? { ...bill, ...updates } : bill
-      )
-    );
-  };
 
   const handleAddBill = async () => {
     if (!newBill.name || !newBill.amount || !newBill.due_date) return;
