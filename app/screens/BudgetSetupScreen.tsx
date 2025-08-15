@@ -44,7 +44,7 @@ const BudgetSetupScreen = (props: Props = {}) => {
   const [bills, setBills] = useState<Bill[]>([]);
   const [savingsGoal, setSavingsGoal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isBillsSectionOpen, setIsBillsSectionOpen] = useState(true);
   const [isAddingBill, setIsAddingBill] = useState(false);
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
@@ -337,99 +337,108 @@ const BudgetSetupScreen = (props: Props = {}) => {
             <View style={styles.sectionHeader}>
               <CreditCard size={20} color="#3b82f6" />
               <Text style={styles.sectionTitle}>Monthly Bills</Text>
-            </View>
-
-            {/* Filter Tabs */}
-            <View style={styles.filterTabs}>
+              {/* Add collapse/expand button */}
               <TouchableOpacity
-                style={[styles.filterTab, filterType === 'all' && { borderBottomColor: '#3b82f6' }]}
-                onPress={() => setFilterType('all')}
+                style={styles.collapseButton}
+                onPress={() => setIsCollapsed(!isCollapsed)}
               >
-                <Text style={[styles.filterTabText, filterType === 'all' && { color: '#3b82f6', fontWeight: '600' }]}>
-                  All
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.filterTab, filterType === 'mandatory' && { borderBottomColor: '#3b82f6' }]}
-                onPress={() => setFilterType('mandatory')}
-              >
-                <Text style={[styles.filterTabText, filterType === 'mandatory' && { color: '#3b82f6', fontWeight: '600' }]}>
-                  Mandatory
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.filterTab, filterType === 'optional' && { borderBottomColor: '#3b82f6' }]}
-                onPress={() => setFilterType('optional')}
-              >
-                <Text style={[styles.filterTabText, filterType === 'optional' && { color: '#3b82f6', fontWeight: '600' }]}>
-                  Optional
+                <Text style={styles.collapseButtonText}>
+                  {isCollapsed ? 'Show' : 'Hide'}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Bills List */}
-            <FlatList
-              data={filteredBills}
-              scrollEnabled={false}
-              keyExtractor={item => item.id}
-              contentContainerStyle={styles.billsList}
-              renderItem={({ item: bill }) => (
+            {/* Filter Tabs - Only show when not collapsed */}
+            {!isCollapsed && (
+              <View style={styles.filterTabs}>
                 <TouchableOpacity
-                  style={styles.billItem}
-                  onPress={() => setEditingBill(JSON.parse(JSON.stringify(bill))) // makes a shallow copy
-                  }
+                  style={[styles.filterTab, filterType === 'all' && { borderBottomColor: '#3b82f6' }]}
+                  onPress={() => setFilterType('all')}
                 >
-                  <View style={styles.billLeft}>
-                    <View style={[
-                      styles.billTypeIndicator,
-                      bill.type === 'mandatory' ? styles.mandatoryIndicator : styles.optionalIndicator
-                    ]} />
+                  <Text style={[styles.filterTabText, filterType === 'all' && { color: '#3b82f6', fontWeight: '600' }]}>
+                    All
+                  </Text>
+                </TouchableOpacity>
 
-                    <View>
-                      <Text style={styles.billName} numberOfLines={1}>
-                        {bill.name}
-                      </Text>
-                      <View style={styles.billMeta}>
-                        <Text style={styles.billDueDate}>
-                          Due on {formatDueDate(bill.due_date)}
+                <TouchableOpacity
+                  style={[styles.filterTab, filterType === 'mandatory' && { borderBottomColor: '#3b82f6' }]}
+                  onPress={() => setFilterType('mandatory')}
+                >
+                  <Text style={[styles.filterTabText, filterType === 'mandatory' && { color: '#3b82f6', fontWeight: '600' }]}>
+                    Mandatory
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.filterTab, filterType === 'optional' && { borderBottomColor: '#3b82f6' }]}
+                  onPress={() => setFilterType('optional')}
+                >
+                  <Text style={[styles.filterTabText, filterType === 'optional' && { color: '#3b82f6', fontWeight: '600' }]}>
+                    Optional
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Bills List - Only show when not collapsed */}
+            {!isCollapsed && (
+              <FlatList
+                data={filteredBills}
+                scrollEnabled={false}
+                keyExtractor={item => item.id}
+                contentContainerStyle={styles.billsList}
+                renderItem={({ item: bill }) => (
+                  <TouchableOpacity
+                    style={styles.billItem}
+                    onPress={() => setEditingBill(bill)}
+                    activeOpacity={0.7} // Better feedback when pressed
+                  >
+                    <View style={styles.billLeft}>
+                      <View style={[
+                        styles.billTypeIndicator,
+                        bill.type === 'mandatory' ? styles.mandatoryIndicator : styles.optionalIndicator
+                      ]} />
+
+                      <View style={styles.billInfoContainer}>
+                        <Text style={styles.billName} numberOfLines={1} ellipsizeMode="tail">
+                          {bill.name}
                         </Text>
-                        {bill.paid_by_credit_card && (
-                          <CreditCard size={14} color="#3b82f6" />
-                        )}
+                        <View style={styles.billMeta}>
+                          <Text style={styles.billDueDate}>
+                            Due on {formatDueDate(bill.due_date)}
+                          </Text>
+                          {bill.paid_by_credit_card && (
+                            <View style={styles.creditCardIcon}>
+                              <CreditCard size={16} color="#3b82f6" />
+                            </View>
+                          )}
+                        </View>
                       </View>
                     </View>
-                  </View>
 
-                  <View style={styles.billRight}>
-                    <Text style={styles.billAmount}>
-                      ${bill.amount?.toFixed(2)}
-                    </Text>
-
-                    <View style={styles.billStatusContainer}>
-                      <Switch
-                        value={bill.is_paid}
-                        onValueChange={(checked) => {
-                          console.log("handleBillStatusChange toggle", bill.id, checked ? "paid" : "unpaid")
-
-                          handleBillStatusChange(bill.id, checked ? "paid" : "unpaid");
-                        }}
-                        trackColor={{
-                          false: '#e5e7eb',
-                          true: bill.type === 'mandatory' ? '#10b981' : '#3b82f6'
-                        }}
-                      />
-                      <Text style={styles.billStatusText}>
-                        {bill.status === 'paid' ? 'Paid' : 'Unpaid'}
+                    <View style={styles.billRight}>
+                      <Text style={styles.billAmount}>
+                        ${bill.amount?.toFixed(2)}
                       </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
 
-            {/* Add Bill Button */}
+                      <View style={styles.billStatusContainer}>
+                        <Switch
+                          value={bill.is_paid}
+                          onValueChange={(checked) => handleBillStatusChange(bill.id, checked ? 'paid' : 'unpaid')}
+                          trackColor={{ false: '#e5e7eb', true: '#3b82f6' }}
+                          thumbColor="#ffffff"
+                        />
+                        <Text style={styles.billStatusText}>
+                          {bill.is_paid ? 'Paid' : 'Unpaid'}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+
+            {/* Add Bill Button - Always visible */}
             <Button
               mode="contained-tonal"
               onPress={handleAddNewBill}
@@ -441,274 +450,274 @@ const BudgetSetupScreen = (props: Props = {}) => {
           </View>
 
           // Replace the existing modals with these new ones
-{/* Add Bill Modal */}
-<Modal
-  visible={isAddingBill}
-  animationType="slide"
-  transparent={true}
-  onRequestClose={() => setIsAddingBill(false)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContainer}>
-      <View style={styles.modalHeader}>
-        <Text style={styles.modalTitle}>Add New Bill</Text>
-        <TouchableOpacity onPress={() => setIsAddingBill(false)}>
-          <X size={24} color="#6b7280" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.modalContent}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Bill Name</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="Electricity Bill"
-            value={newBill.name || ""}
-            onChangeText={text => setNewBill(prev => ({ ...prev, name: text }))}
-            style={styles.textInput}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Amount</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="0.00"
-            keyboardType="numeric"
-            value={newBill.amount ? newBill.amount.toString() : ""}
-            onChangeText={text => {
-              const num = parseFloat(text) || 0;
-              setNewBill(prev => ({ ...prev, amount: num }));
-            }}
-            style={styles.textInput}
-            left={<TextInput.Affix text="$" />}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Due Date (Day of Month)</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="15"
-            keyboardType="numeric"
-            value={newBill.due_date ? newBill.due_date.toString() : "1"}
-            onChangeText={text => {
-              const num = Math.min(31, Math.max(1, parseInt(text) || 1));
-              setNewBill(prev => ({ ...prev, due_date: num }));
-            }}
-            style={styles.textInput}
-            maxLength={2}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Type</Text>
-          <View style={styles.typeButtons}>
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                newBill.type === 'mandatory' && styles.typeButtonActive
-              ]}
-              onPress={() => setNewBill(prev => ({ ...prev, type: 'mandatory' }))}
-            >
-              <Text style={[
-                styles.typeButtonText,
-                newBill.type === 'mandatory' && styles.typeButtonTextActive
-              ]}>
-                Mandatory
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                newBill.type === 'optional' && styles.typeButtonActive
-              ]}
-              onPress={() => setNewBill(prev => ({ ...prev, type: 'optional' }))}
-            >
-              <Text style={[
-                styles.typeButtonText,
-                newBill.type === 'optional' && styles.typeButtonTextActive
-              ]}>
-                Optional
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.checkboxContainer}>
-          <TouchableOpacity
-            style={styles.checkbox}
-            onPress={() => setNewBill(prev => ({ ...prev, paid_by_credit_card: !prev.paid_by_credit_card }))}
+          {/* Add Bill Modal */}
+          <Modal
+            visible={isAddingBill}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setIsAddingBill(false)}
           >
-            <View style={[
-              styles.checkboxBox,
-              newBill.paid_by_credit_card && styles.checkboxBoxChecked
-            ]}>
-              {newBill.paid_by_credit_card && (
-                <Checkbox.Android status="checked" color="#3b82f6" />
-              )}
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Add New Bill</Text>
+                  <TouchableOpacity onPress={() => setIsAddingBill(false)}>
+                    <X size={24} color="#6b7280" />
+                  </TouchableOpacity>
+                </View>
+
+                <ScrollView style={styles.modalContent}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Bill Name</Text>
+                    <TextInput
+                      mode="outlined"
+                      placeholder="Electricity Bill"
+                      value={newBill.name || ""}
+                      onChangeText={text => setNewBill(prev => ({ ...prev, name: text }))}
+                      style={styles.textInput}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Amount</Text>
+                    <TextInput
+                      mode="outlined"
+                      placeholder="0.00"
+                      keyboardType="numeric"
+                      value={newBill.amount ? newBill.amount.toString() : ""}
+                      onChangeText={text => {
+                        const num = parseFloat(text) || 0;
+                        setNewBill(prev => ({ ...prev, amount: num }));
+                      }}
+                      style={styles.textInput}
+                      left={<TextInput.Affix text="$" />}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Due Date (Day of Month)</Text>
+                    <TextInput
+                      mode="outlined"
+                      placeholder="15"
+                      keyboardType="numeric"
+                      value={newBill.due_date ? newBill.due_date.toString() : "1"}
+                      onChangeText={text => {
+                        const num = Math.min(31, Math.max(1, parseInt(text) || 1));
+                        setNewBill(prev => ({ ...prev, due_date: num }));
+                      }}
+                      style={styles.textInput}
+                      maxLength={2}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Type</Text>
+                    <View style={styles.typeButtons}>
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          newBill.type === 'mandatory' && styles.typeButtonActive
+                        ]}
+                        onPress={() => setNewBill(prev => ({ ...prev, type: 'mandatory' }))}
+                      >
+                        <Text style={[
+                          styles.typeButtonText,
+                          newBill.type === 'mandatory' && styles.typeButtonTextActive
+                        ]}>
+                          Mandatory
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          newBill.type === 'optional' && styles.typeButtonActive
+                        ]}
+                        onPress={() => setNewBill(prev => ({ ...prev, type: 'optional' }))}
+                      >
+                        <Text style={[
+                          styles.typeButtonText,
+                          newBill.type === 'optional' && styles.typeButtonTextActive
+                        ]}>
+                          Optional
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.checkboxContainer}>
+                    <TouchableOpacity
+                      style={styles.checkbox}
+                      onPress={() => setNewBill(prev => ({ ...prev, paid_by_credit_card: !prev.paid_by_credit_card }))}
+                    >
+                      <View style={[
+                        styles.checkboxBox,
+                        newBill.paid_by_credit_card && styles.checkboxBoxChecked
+                      ]}>
+                        {newBill.paid_by_credit_card && (
+                          <Checkbox.Android status="checked" color="#3b82f6" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>Paid by Credit Card</Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setIsAddingBill(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleAddBill}
+                  >
+                    <Text style={styles.submitButtonText}>Add Bill</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-            <Text style={styles.checkboxLabel}>Paid by Credit Card</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+          </Modal>
 
-      <View style={styles.modalFooter}>
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => setIsAddingBill(false)}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={handleAddBill}
-        >
-          <Text style={styles.submitButtonText}>Add Bill</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
-
-{/* Edit Bill Modal */}
-<Modal
-  visible={!!editingBill}
-  animationType="slide"
-  transparent={true}
-  onRequestClose={() => setEditingBill(null)}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContainer}>
-      <View style={styles.modalHeader}>
-        <Text style={styles.modalTitle}>Edit Bill</Text>
-        <TouchableOpacity onPress={() => setEditingBill(null)}>
-          <X size={24} color="#6b7280" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.modalContent}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Bill Name</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="Electricity Bill"
-            value={editingBill?.name || ""}
-            onChangeText={text => editingBill && setEditingBill({...editingBill, name: text})}
-            style={styles.textInput}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Amount</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="0.00"
-            keyboardType="numeric"
-            value={editingBill?.amount ? editingBill.amount.toString() : ""}
-            onChangeText={text => {
-              const num = parseFloat(text) || 0;
-              editingBill && setEditingBill({...editingBill, amount: num});
-            }}
-            style={styles.textInput}
-            left={<TextInput.Affix text="$" />}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Due Date (Day of Month)</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="15"
-            keyboardType="numeric"
-            value={editingBill?.due_date ? editingBill.due_date.toString() : "1"}
-            onChangeText={text => {
-              const num = Math.min(31, Math.max(1, parseInt(text) || 1));
-              editingBill && setEditingBill({...editingBill, due_date: num});
-            }}
-            style={styles.textInput}
-            maxLength={2}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Type</Text>
-          <View style={styles.typeButtons}>
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                editingBill?.type === 'mandatory' && styles.typeButtonActive
-              ]}
-              onPress={() => editingBill && setEditingBill({...editingBill, type: 'mandatory'})}
-            >
-              <Text style={[
-                styles.typeButtonText,
-                editingBill?.type === 'mandatory' && styles.typeButtonTextActive
-              ]}>
-                Mandatory
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                editingBill?.type === 'optional' && styles.typeButtonActive
-              ]}
-              onPress={() => editingBill && setEditingBill({...editingBill, type: 'optional'})}
-            >
-              <Text style={[
-                styles.typeButtonText,
-                editingBill?.type === 'optional' && styles.typeButtonTextActive
-              ]}>
-                Optional
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.checkboxContainer}>
-          <TouchableOpacity
-            style={styles.checkbox}
-            onPress={() => editingBill && setEditingBill({
-              ...editingBill,
-              paid_by_credit_card: !editingBill.paid_by_credit_card
-            })}
+          {/* Edit Bill Modal */}
+          <Modal
+            visible={!!editingBill}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setEditingBill(null)}
           >
-            <View style={[
-              styles.checkboxBox,
-              editingBill?.paid_by_credit_card && styles.checkboxBoxChecked
-            ]}>
-              {editingBill?.paid_by_credit_card && (
-                <Checkbox.Android status="checked" color="#3b82f6" />
-              )}
-            </View>
-            <Text style={styles.checkboxLabel}>Paid by Credit Card</Text>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Edit Bill</Text>
+                  <TouchableOpacity onPress={() => setEditingBill(null)}>
+                    <X size={24} color="#6b7280" />
+                  </TouchableOpacity>
+                </View>
 
-        <View style={styles.checkboxContainer}>
-          <TouchableOpacity
-            style={styles.checkbox}
-            onPress={() => editingBill && setEditingBill({
-              ...editingBill,
-              is_paid: !editingBill.is_paid
-            })}
-          >
-            <View style={[
-              styles.checkboxBox,
-              editingBill?.is_paid && styles.checkboxBoxChecked
-            ]}>
-              {editingBill?.is_paid && (
-                <Checkbox.Android status="checked" color="#3b82f6" />
-              )}
-            </View>
-            <Text style={styles.checkboxLabel}>Paid</Text>
-          </TouchableOpacity>
-        </View>
+                <ScrollView style={styles.modalContent}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Bill Name</Text>
+                    <TextInput
+                      mode="outlined"
+                      placeholder="Electricity Bill"
+                      value={editingBill?.name || ""}
+                      onChangeText={text => editingBill && setEditingBill({ ...editingBill, name: text })}
+                      style={styles.textInput}
+                    />
+                  </View>
 
-        {/* <View style={styles.checkboxContainer}>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Amount</Text>
+                    <TextInput
+                      mode="outlined"
+                      placeholder="0.00"
+                      keyboardType="numeric"
+                      value={editingBill?.amount ? editingBill.amount.toString() : ""}
+                      onChangeText={text => {
+                        const num = parseFloat(text) || 0;
+                        editingBill && setEditingBill({ ...editingBill, amount: num });
+                      }}
+                      style={styles.textInput}
+                      left={<TextInput.Affix text="$" />}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Due Date (Day of Month)</Text>
+                    <TextInput
+                      mode="outlined"
+                      placeholder="15"
+                      keyboardType="numeric"
+                      value={editingBill?.due_date ? editingBill.due_date.toString() : "1"}
+                      onChangeText={text => {
+                        const num = Math.min(31, Math.max(1, parseInt(text) || 1));
+                        editingBill && setEditingBill({ ...editingBill, due_date: num });
+                      }}
+                      style={styles.textInput}
+                      maxLength={2}
+                    />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Type</Text>
+                    <View style={styles.typeButtons}>
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          editingBill?.type === 'mandatory' && styles.typeButtonActive
+                        ]}
+                        onPress={() => editingBill && setEditingBill({ ...editingBill, type: 'mandatory' })}
+                      >
+                        <Text style={[
+                          styles.typeButtonText,
+                          editingBill?.type === 'mandatory' && styles.typeButtonTextActive
+                        ]}>
+                          Mandatory
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.typeButton,
+                          editingBill?.type === 'optional' && styles.typeButtonActive
+                        ]}
+                        onPress={() => editingBill && setEditingBill({ ...editingBill, type: 'optional' })}
+                      >
+                        <Text style={[
+                          styles.typeButtonText,
+                          editingBill?.type === 'optional' && styles.typeButtonTextActive
+                        ]}>
+                          Optional
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.checkboxContainer}>
+                    <TouchableOpacity
+                      style={styles.checkbox}
+                      onPress={() => editingBill && setEditingBill({
+                        ...editingBill,
+                        paid_by_credit_card: !editingBill.paid_by_credit_card
+                      })}
+                    >
+                      <View style={[
+                        styles.checkboxBox,
+                        editingBill?.paid_by_credit_card && styles.checkboxBoxChecked
+                      ]}>
+                        {editingBill?.paid_by_credit_card && (
+                          <Checkbox.Android status="checked" color="#3b82f6" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>Paid by Credit Card</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.checkboxContainer}>
+                    <TouchableOpacity
+                      style={styles.checkbox}
+                      onPress={() => editingBill && setEditingBill({
+                        ...editingBill,
+                        is_paid: !editingBill.is_paid
+                      })}
+                    >
+                      <View style={[
+                        styles.checkboxBox,
+                        editingBill?.is_paid && styles.checkboxBoxChecked
+                      ]}>
+                        {editingBill?.is_paid && (
+                          <Checkbox.Android status="checked" color="#3b82f6" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>Paid</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* <View style={styles.checkboxContainer}>
           <TouchableOpacity
             style={styles.checkbox}
             onPress={() => editingBill && setEditingBill({
@@ -731,44 +740,44 @@ const BudgetSetupScreen = (props: Props = {}) => {
             </Text>
           </TouchableOpacity>
         </View> */}
-      </ScrollView>
+                </ScrollView>
 
-      <View style={styles.modalFooter}>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => {
-            if (editingBill) {
-              handleDeleteBill(editingBill.id);
-              setEditingBill(null);
-            }
-          }}
-        >
-          <Text style={styles.deleteButtonText}>Delete</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={() => {
-            if (editingBill) {
-              handleUpdateBill(editingBill.id, {
-                name: editingBill.name,
-                amount: editingBill.amount,
-                due_date: editingBill.due_date,
-                type: editingBill.type,
-                status: editingBill.is_paid ? 'paid' : 'unpaid',
-                is_paid: editingBill.is_paid,
-                paid_by_credit_card: editingBill.paid_by_credit_card
-              });
-              setEditingBill(null);
-            }
-          }}
-        >
-          <Text style={styles.submitButtonText}>Save Changes</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => {
+                      if (editingBill) {
+                        handleDeleteBill(editingBill.id);
+                        setEditingBill(null);
+                      }
+                    }}
+                  >
+                    <Text style={styles.deleteButtonText}>Delete</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={() => {
+                      if (editingBill) {
+                        handleUpdateBill(editingBill.id, {
+                          name: editingBill.name,
+                          amount: editingBill.amount,
+                          due_date: editingBill.due_date,
+                          type: editingBill.type,
+                          status: editingBill.is_paid ? 'paid' : 'unpaid',
+                          is_paid: editingBill.is_paid,
+                          paid_by_credit_card: editingBill.paid_by_credit_card
+                        });
+                        setEditingBill(null);
+                      }
+                    }}
+                  >
+                    <Text style={styles.submitButtonText}>Save Changes</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
           {/* Savings Section */}
           <View style={styles.section}>
@@ -968,13 +977,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#0f172a',
     flex: 1,
-    marginRight: 8
+    marginRight: 8,
+    marginBottom: 4,
   },
   billAmount: {
     fontSize: 16,
     fontWeight: '600',
     color: '#0f172a',
-    marginRight: 12
+    minWidth: 70,
+    textAlign: 'right',
   },
   filterTabs: {
     flexDirection: 'row',
@@ -993,13 +1004,20 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   billsList: {
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16,
+    // paddingBottom: 8,
   },
   billItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    //  padding: 16,
     borderRadius: 8,
     marginBottom: 8,
     elevation: 1,
@@ -1008,40 +1026,49 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    //marginRight: 12,
   },
   billTypeIndicator: {
-    width: 8,
+    width: 4,
     height: 40,
-    borderRadius: 4,
-    marginRight: 12,
+    borderRadius: 2,
+    marginRight: 16,
+  },
+  billInfoContainer: {
+    flex: 1,
+  },
+  billMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  billDueDate: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginRight: 8,
+  },
+  creditCardIcon: {
+    padding: 4,
+  },
+  billRight: {
+    // flexDirection: 'row',
+    // alignItems: 'center',
+  },
+  billStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 80,
+    paddingVertical: 2,
+  },
+  billStatusText: {
+    fontSize: 14,
+    marginLeft: 8,
+    color: '#6b7280',
   },
   mandatoryIndicator: {
     backgroundColor: '#3b82f6',
   },
   optionalIndicator: {
     backgroundColor: '#10b981',
-  },
-  billMeta: {
-    flex: 1,
-  },
-  billDueDate: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 2,
-  },
-  billRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  billStatusContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 12,
-  },
-  billStatusText: {
-    fontSize: 12,
-    fontWeight: '600',
   },
 
   // Buttons
@@ -1303,6 +1330,15 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 8,
+  },
+  collapseButton: {
+    marginLeft: 'auto',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  collapseButtonText: {
+    color: '#3b82f6',
+    fontWeight: '600',
   },
 });
 

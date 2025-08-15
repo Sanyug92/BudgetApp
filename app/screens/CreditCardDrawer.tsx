@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Animated, PanResponder, Dimensions, FlatList, Alert } from "react-native";
 import { Text, Card, Button, TextInput, ActivityIndicator, useTheme } from "react-native-paper";
 import { formatDistanceToNow } from "date-fns";
-import { CreditCard as CreditCardIcon, Edit3, X, Plus } from "lucide-react-native";
+import { CreditCard as CreditCardIcon, Edit3, X, Plus, Info } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CreditCard, useBudgetContext } from "@/context/BudgetContext";
 import ReanimatedCarousel from "react-native-reanimated-carousel";
@@ -245,6 +245,14 @@ export function CreditCardDrawer() {
 
     return (
       <View style={[styles.cardWrapper, { width: CARD_WIDTH }]}>
+        <View style={styles.infoCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+            <Text style={styles.infoText}>
+              Add each credit card with a name and its credit limit. Update your available credit{' '}
+              <Text style={styles.noteText}>— not your balance —</Text> to see the real picture.
+            </Text>
+          </View>
+        </View>
         <Card style={styles.card}>
           <LinearGradient
             colors={[startColor, endColor]}
@@ -419,6 +427,25 @@ export function CreditCardDrawer() {
 }
 
 const styles = StyleSheet.create({
+  infoCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3b82f6',
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#4b5563',
+    lineHeight: 20,
+    flex: 1,
+  },
+  noteText: {
+    fontStyle: 'italic',
+    color: '#3b82f6',
+    fontWeight: '800',
+  },
   container: {
     position: 'absolute',
     bottom: 0,

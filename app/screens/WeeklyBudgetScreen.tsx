@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { Card, Title, Paragraph, Chip, ProgressBar, useTheme } from "react-native-paper";
-import { Calendar, AlertCircle, CheckCircle2, Info, ChevronRight } from "lucide-react-native";
+import { Calendar, AlertCircle, CheckCircle2, Info, X, ChevronRight } from "lucide-react-native";
 import { NavigationProp } from "@react-navigation/native";
 import { useBudgetContext } from "@/context/BudgetContext";
 import { useAuth } from '@/context/AuthContext';
 import { Animated, PanResponder } from "react-native";
-
 interface WeeklyBudgetScreenProps {
   currentWeek: number;
   dayOfWeek: number;
@@ -43,6 +42,7 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
   const theme = useTheme();
   const { budgetData, loading, error, fetchAndCalculateBudget } = useBudgetContext();
   const [refreshing, setRefreshing] = useState(false);
+  const [showInfoCard, setShowInfoCard] = useState(true);
   const { user, loading: authLoading } = useAuth();
   const isInitialMount = useRef(true);
   const hasAutoSelected = useRef(false);
@@ -277,8 +277,8 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
               : 0
           }
           color={
-            (budgetData?.discretionarySpent || 0) > (budgetData?.discretionLimit || 0) 
-              ? colors.destructive 
+            (budgetData?.discretionarySpent || 0) > (budgetData?.discretionLimit || 0)
+              ? colors.destructive
               : colors.success
           }
           style={styles.progressBar}
@@ -330,7 +330,7 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
           <View style={styles.targetCardContent}>
             <Text style={styles.targetDescription}>{target.description}</Text>
             <Text style={styles.targetCatchphrase}>"{target.catchphrase}"</Text>
-            
+
             <View style={styles.targetAmountRow}>
               <Text style={styles.targetAmountLabel}>Weekly Budget:</Text>
               <Text style={[styles.targetAmount, { color: target.color }]}>
@@ -348,7 +348,7 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
                   ${Math.abs(target.remaining).toFixed(2)}
                 </Text>
               </View>
-              
+
               <View style={styles.targetMetric}>
                 <Text style={styles.targetMetricLabel}>Daily Budget</Text>
                 <Text style={[
@@ -363,23 +363,23 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
             {isSelected && (
               <View style={[
                 styles.targetStatusBox,
-                { 
-                  backgroundColor: target.overBudget ? '#fee2e2' : 
+                {
+                  backgroundColor: target.overBudget ? '#fee2e2' :
                     target.onTrack ? '#ecfdf5' : '#fef3c7',
-                  borderColor: target.overBudget ? colors.destructive : 
+                  borderColor: target.overBudget ? colors.destructive :
                     target.onTrack ? colors.success : colors.warning
                 }
               ]}>
                 <IconComponent size={18} color={
-                  target.overBudget ? colors.destructive : 
-                  target.onTrack ? colors.success : colors.warning
+                  target.overBudget ? colors.destructive :
+                    target.onTrack ? colors.success : colors.warning
                 } />
                 <Text style={styles.targetStatusText}>
                   {target.overBudget
                     ? "Budget exceeded — adjust spending"
                     : target.onTrack
-                    ? "On track with your weekly budget"
-                    : "Getting close to your limit"}
+                      ? "On track with your weekly budget"
+                      : "Getting close to your limit"}
                 </Text>
               </View>
             )}
@@ -391,14 +391,14 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
 
   return (
     <View style={styles.container}>
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={[
           styles.scrollContainer,
           { paddingBottom: minDrawerHeight + 20 } // Add padding for the drawer
         ]}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
+          <RefreshControl
+            refreshing={refreshing}
             onRefresh={handleRefresh}
             colors={[theme.colors.primary]}
           />
@@ -406,24 +406,31 @@ export const WeeklyBudgetScreen: React.FC<WeeklyBudgetScreenProps> = ({
       >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Weekly Budget</Text>
-          <Text style={styles.headerSubtitle}>
-            {getCurrentWeekLabel()} • {getDayOfWeekLabel()}
-          </Text>
         </View>
 
-        <Card style={[styles.card, styles.infoCard]}>
-          <View style={styles.cardHeader}>
-            <Info size={20} color={theme.colors.primary} />
-            <Text style={styles.cardTitle}>How it works</Text>
-          </View>
-          <Text style={styles.infoText}>
-            Weekly targets are based on what's left after savings and bills. 
-            Adjust dynamically based on your spending. Weeks run Sunday–Saturday.
-          </Text>
-        </Card>
+        {showInfoCard && (
+          <Card style={[styles.card, styles.infoCard]}>
+            <View style={styles.cardHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <Info size={20} color={theme.colors.primary} />
+                <Text style={styles.cardTitle}>How it works</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowInfoCard(false)}
+                style={styles.closeButton}
+              >
+                <X size={20} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.infoText}>
+              We crunch your numbers and turn them into five spending 'vibes' — from Main Character Money to Card Declined Era.
+              Each week, you'll get a weekly budget, your daily budget, and get a heads-up before you start spending money you don't have.
+            </Text>
+          </Card>
+        )}
 
         {renderMonthlyProgressCard()}
-        
+
         <Text style={styles.sectionTitle}>Choose Your Weekly Target</Text>
         {[...targets]
           .sort((a, b) => b.isBest ? 1 : -1) // Sort to put recommended card first
@@ -439,6 +446,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
     position: 'relative',
+  },
+  closeButton: {
+    padding: 4,
+    marginLeft: 8,
   },
   drawerContainer: {
     position: 'absolute',
