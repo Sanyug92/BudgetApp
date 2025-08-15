@@ -26,29 +26,22 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
     if (user) {
       // Navigate to the main app screen after successful login
       // The Demo screen is a tab navigator, so we're navigating to the 'Home' tab by default
-      navigation.replace("Demo", {
-        screen: "Home",
-        params: {
-          // Add any required parameters for the Home screen here
-          // Based on DemoTabParamList, Home can accept queryIndex and itemIndex
-          queryIndex: undefined,
-          itemIndex: undefined
-        }
-      });
+      navigation.replace("Main", { screen: "Home" });
+
     }
   }, [user, navigation]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* App Branding */}
-      <View style={styles.brandContainer}>
-        <Text style={styles.brandTitle}>Credit Wise</Text>
+      {/* <View style={styles.brandContainer}>
+        <Text style={styles.brandTitle}>Daily Dough</Text>
         <Text style={styles.brandQuote}>
           “Take control of your finances and achieve your financial goals with
           our intuitive budgeting tools.”
         </Text>
-        <Text style={styles.brandFooter}>— The Credit Wise Team</Text>
-      </View>
+        <Text style={styles.brandFooter}>— The Daily Dough Team</Text>
+      </View> */}
 
       {/* Login Form */}
       <View style={styles.formContainer}>

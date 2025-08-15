@@ -35,7 +35,7 @@ export function CustomDrawerContent(props: CustomDrawerContentProps) {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text variant="titleMedium" style={styles.userName}>
-            Credit Wise Budget
+            Daily Dough
           </Text>
           <TouchableOpacity 
             onPress={() => props.navigation.closeDrawer()}

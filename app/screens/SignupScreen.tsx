@@ -22,11 +22,11 @@ export const SignupScreen: FC<SignupScreenProps> = ({ navigation }) => {
     <ScrollView contentContainerStyle={styles.container}>
       {/* App Branding */}
       <View style={styles.brandContainer}>
-        <Text style={styles.brandTitle}>Credit Wise</Text>
+        <Text style={styles.brandTitle}>Daily Dough</Text>
         <Text style={styles.brandQuote}>
-          “Start your journey to financial freedom with our intuitive budgeting tools.”
+          “Say goodbye to credit card debt and hello to financial freedom.”
         </Text>
-        <Text style={styles.brandFooter}>— The Credit Wise Team</Text>
+        <Text style={styles.brandFooter}>— The Daily Dough Team</Text>
       </View>
 
       {/* Signup Form */}
